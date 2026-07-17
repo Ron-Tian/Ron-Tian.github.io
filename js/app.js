@@ -409,13 +409,11 @@ async function renderHome(container) {
   document.title = '拾柴记 — 一点一滴，记录生活';
 
   container.innerHTML = `
-    <div class="fade-in">
-      <div class="list-header">
-        <h2>文章</h2>
-        <span class="count">共 ${sorted.length} 篇</span>
-      </div>
-      <div class="post-list" id="postList"></div>
+    <div class="list-header">
+      <h2>文章</h2>
+      <span class="count">共 ${sorted.length} 篇</span>
     </div>
+    <div class="post-list" id="postList"></div>
   `;
 
   const list = document.getElementById('postList');

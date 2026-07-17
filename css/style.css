@@ -194,15 +194,13 @@ img { max-width: 100%; }
   margin: 0 -16px;
   border-bottom: 1px solid var(--c-border-light);
   cursor: pointer;
-  transition: padding 0.25s var(--ease), background-color 0.25s var(--ease);
+  transition: transform 0.25s var(--ease), background-color 0.25s var(--ease);
   border-radius: 8px;
-  /* 防止 fade-in 动画残留合成层导致 hover 不触发 */
-  will-change: auto;
 }
 
 .post-row:hover {
-  padding-left: 24px;
-  background: var(--c-bg-hover);
+  transform: translateX(6px);
+  background-color: var(--c-bg-hover);
 }
 
 .post-row:hover .post-row-title {
