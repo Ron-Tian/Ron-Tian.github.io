@@ -409,16 +409,18 @@ async function renderHome(container) {
   document.title = '拾柴记 — 一点一滴，记录生活';
 
   container.innerHTML = `
-    <div class="list-header">
-      <h2>文章</h2>
-      <span class="count">共 ${sorted.length} 篇</span>
+    <div class="fade-in">
+      <div class="list-header">
+        <h2>文章</h2>
+        <span class="count">共 ${sorted.length} 篇</span>
+      </div>
+      <div class="post-list" id="postList"></div>
     </div>
-    <div class="post-list" id="postList"></div>
   `;
 
   const list = document.getElementById('postList');
   list.innerHTML = sorted.map(post => `
-    <div class="post-row fade-in" onclick="navigate('post/${encodeURIComponent(post.id)}')">
+    <div class="post-row" onclick="navigate('post/${encodeURIComponent(post.id)}')">
       <div class="post-row-meta">
         <span>${formatDateShort(post.date)}</span>
         <span class="dot"></span>
