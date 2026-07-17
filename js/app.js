@@ -108,10 +108,121 @@ function renderMarkdown(content) {
     return '<pre style="white-space:pre-wrap;">' + escapeHtml(content) + '</pre>';
   }
   try {
-    return marked.parse(content);
+    const html = marked.parse(content);
+    return html;
   } catch (e) {
     return '<pre style="white-space:pre-wrap;">' + escapeHtml(content) + '</pre>';
   }
+}
+
+function highlightCode(container) {
+  if (typeof hljs === 'undefined') return;
+  container.querySelectorAll('pre code').forEach(block => {
+    try { hljs.highlightElement(block); } catch (e) {}
+  });
+}
+
+/* ========================================
+   文章目录 TOC
+   ======================================== */
+let _tocScrollHandler = null;
+
+function addHeadingIds(container) {
+  const headings = container.querySelectorAll('h1, h2, h3');
+  const usedIds = {};
+  headings.forEach(h => {
+    let id = h.textContent.trim()
+      .replace(/[^\w\u4e00-\u9fa5\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase();
+    if (!id) id = 'heading';
+    if (usedIds[id]) {
+      usedIds[id]++;
+      id = `${id}-${usedIds[id]}`;
+    } else {
+      usedIds[id] = 1;
+    }
+    h.id = id;
+  });
+}
+
+function buildTOC(markdownBody) {
+  const headings = markdownBody.querySelectorAll('h1, h2, h3');
+  if (headings.length < 2) return; // 少于2个标题不显示目录
+
+  // 移除旧 TOC
+  const oldToc = document.querySelector('.post-toc');
+  if (oldToc) oldToc.remove();
+
+  // 清理旧 scroll handler
+  if (_tocScrollHandler) {
+    window.removeEventListener('scroll', _tocScrollHandler);
+    _tocScrollHandler = null;
+  }
+
+  const items = Array.from(headings).map(h => {
+    const level = parseInt(h.tagName[1]);
+    return { id: h.id, text: h.textContent.trim(), level };
+  });
+
+  const toc = document.createElement('nav');
+  toc.className = 'post-toc';
+  toc.innerHTML = `
+    <div class="post-toc-title">目录</div>
+    <ul class="post-toc-list">
+      ${items.map(item => `
+        <li><a href="#${item.id}" class="toc-level-${item.level}" data-toc-id="${item.id}" onclick="document.getElementById('${item.id}').scrollIntoView({behavior:'smooth',block:'start'});return false;">${escapeHtml(item.text)}</a></li>
+      `).join('')}
+    </ul>
+  `;
+  document.body.appendChild(toc);
+
+  // Scroll spy — 高亮当前阅读章节
+  const links = toc.querySelectorAll('.post-toc-list a');
+  let ticking = false;
+
+  _tocScrollHandler = function() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY + 120;
+        let currentIdx = 0;
+        headings.forEach((h, i) => {
+          if (h.offsetTop <= scrollY) currentIdx = i;
+        });
+        links.forEach((link, i) => {
+          link.classList.toggle('active', i === currentIdx);
+        });
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+
+  window.addEventListener('scroll', _tocScrollHandler, { passive: true });
+  _tocScrollHandler(); // 初始化高亮
+}
+
+/* ========================================
+   返回顶部按钮
+   ======================================== */
+function initBackToTop() {
+  const btn = document.getElementById('backToTop');
+  if (!btn) return;
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        btn.classList.toggle('visible', window.scrollY > 300);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 }
 
 /* ========================================
@@ -246,6 +357,16 @@ async function renderView() {
   progressBar.style.display = route.view === 'post' ? 'block' : 'none';
   updateNavActive(route);
 
+  // 离开文章页时清理 TOC
+  if (route.view !== 'post') {
+    const oldToc = document.querySelector('.post-toc');
+    if (oldToc) oldToc.remove();
+    if (_tocScrollHandler) {
+      window.removeEventListener('scroll', _tocScrollHandler);
+      _tocScrollHandler = null;
+    }
+  }
+
   // 只有真正需要网络请求时才显示 loading
   // 首页/标签/搜索：manifest 已缓存就不显示 loading
   const hasCache = PostLoader.loadAllPosts && localStorage.getItem('shichaiji_meta_cache');
@@ -351,7 +472,7 @@ async function renderPost(container, postId) {
           <span>${post.readingTime} 分钟阅读</span>
         </div>
       </div>
-      <div class="markdown-body">
+      <div class="markdown-body" id="markdownBody">
         ${htmlContent}
       </div>
       <nav class="post-nav">
@@ -374,6 +495,14 @@ async function renderPost(container, postId) {
       </section>
     </div>
   `;
+
+  // 代码高亮
+  const markdownBody = document.getElementById('markdownBody');
+  if (markdownBody) {
+    addHeadingIds(markdownBody);
+    highlightCode(markdownBody);
+    buildTOC(markdownBody);
+  }
 
   initReadingProgress();
 
@@ -532,6 +661,7 @@ async function init() {
   try {
     configureMarked();
     initSearch();
+    initBackToTop();
 
     // 预加载文章元数据（manifest 优先，localStorage 缓存秒开）
     await PostLoader.loadAllPosts();

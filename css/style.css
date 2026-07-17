@@ -744,7 +744,125 @@ img { max-width: 100%; }
   color: var(--c-accent);
 }
 
+/* -------- 代码高亮微调 -------- */
+.markdown-body pre {
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code.hljs {
+  padding: 16px 20px;
+  background: var(--c-bg-soft);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* -------- 返回顶部按钮 -------- */
+.back-to-top {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: var(--c-bg);
+  color: var(--c-text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), background-color 0.2s var(--ease), color 0.2s var(--ease);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: var(--c-accent);
+  color: #fff;
+  border-color: var(--c-accent);
+}
+
+/* -------- 文章目录 TOC -------- */
+.post-toc {
+  position: fixed;
+  top: 120px;
+  left: calc(50% + 380px);
+  width: 220px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.8;
+  padding-left: 16px;
+  border-left: 2px solid var(--c-border-light);
+}
+
+.post-toc-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.post-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.post-toc-list li {
+  margin: 0;
+}
+
+.post-toc-list a {
+  display: block;
+  color: var(--c-text-3);
+  text-decoration: none;
+  padding: 3px 0 3px 12px;
+  border-left: 2px solid transparent;
+  margin-left: -2px;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+  line-height: 1.5;
+}
+
+.post-toc-list a:hover {
+  color: var(--c-text);
+}
+
+.post-toc-list a.active {
+  color: var(--c-accent);
+  border-left-color: var(--c-accent);
+  font-weight: 500;
+}
+
+.post-toc-list .toc-level-2 {
+  padding-left: 16px;
+}
+
+.post-toc-list .toc-level-3 {
+  padding-left: 32px;
+  font-size: 12px;
+}
+
 /* -------- 响应式 -------- */
+@media (max-width: 1280px) {
+  .post-toc {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .header-inner {
     padding: 0 20px;
@@ -789,6 +907,13 @@ img { max-width: 100%; }
 
   .post-nav-item.next {
     text-align: left;
+  }
+
+  .back-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
   }
 }
 
