@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-字由 - Manifest 构建脚本
+拾柴记 - Manifest 构建脚本
 
 扫描 posts/ 目录下的所有 .md 文件，解析 frontmatter 元数据，
 生成 posts/manifest.json 供前端加载。
@@ -105,5 +105,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print('字由 - 构建 manifest.json\n')
+    print('拾柴记 - 构建 manifest.json\n')
     main()

@@ -1,5 +1,5 @@
 /**
- * 字由 - SPA 应用主逻辑 v3
+ * 拾柴记 - SPA 应用主逻辑 v3
  * 顶部导航 + 居中内容的网站风格
  * Hash 路由：#/  #/post/:id  #/tag  #/tag/:name  #/about
  */
@@ -51,7 +51,9 @@ function renderMarkdown(content) {
 function navigate(path) {
   let hash = path ? `#/${path}` : '#/';
   window.location.hash = hash;
-  closeSearch();
+  // 清空搜索框（内嵌式搜索，导航时恢复）
+  const input = document.getElementById('searchInput');
+  if (input) input.value = '';
   window.scrollTo(0, 0);
 }
 
@@ -82,30 +84,8 @@ function updateNavActive(route) {
 }
 
 /* ========================================
-   搜索
+   搜索 - 内嵌式（结果直接渲染到内容区）
    ======================================== */
-function toggleSearch() {
-  const expand = document.getElementById('searchExpand');
-  const results = document.getElementById('searchResults');
-  if (expand.classList.contains('active')) {
-    closeSearch();
-  } else {
-    expand.classList.add('active');
-    results.style.display = 'block';
-    setTimeout(() => document.getElementById('searchInput').focus(), 50);
-  }
-}
-
-function closeSearch() {
-  const expand = document.getElementById('searchExpand');
-  const results = document.getElementById('searchResults');
-  const input = document.getElementById('searchInput');
-  expand.classList.remove('active');
-  results.style.display = 'none';
-  input.value = '';
-  results.innerHTML = '';
-}
-
 function initSearch() {
   const input = document.getElementById('searchInput');
   if (!input) return;
@@ -115,41 +95,72 @@ function initSearch() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
       const query = input.value.trim();
-      const results = document.getElementById('searchResults');
+      const content = document.getElementById('content');
 
       if (!query) {
-        results.innerHTML = '';
+        // 清空搜索，恢复当前路由视图
+        await renderView();
         return;
       }
 
       const posts = await PostLoader.searchPosts(query);
       const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+      document.title = `搜索: ${query} — 拾柴记`;
+      // 搜索时不高亮导航
+      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+
       if (sorted.length === 0) {
-        results.innerHTML = '<div class="search-result-item"><div class="search-result-excerpt">未找到匹配文章</div></div>';
+        content.innerHTML = `
+          <div class="fade-in" style="max-width:var(--content-width);margin:0 auto;">
+            <div class="page-header">
+              <h1>搜索结果</h1>
+              <div class="desc">关键词「${escapeHtml(query)}」· 未找到匹配文章</div>
+            </div>
+            <div class="empty-state">
+              <div class="empty-state-icon">🔍</div>
+              <p>没有找到相关文章</p>
+              <p style="margin-top:8px;font-size:0.8rem;color:var(--c-text-3);">试试其他关键词？</p>
+            </div>
+          </div>
+        `;
       } else {
-        results.innerHTML = sorted.map(post => `
-          <div class="search-result-item" onclick="navigate('post/${encodeURIComponent(post.id)}')">
-            <div class="search-result-title">${escapeHtml(post.title)}</div>
-            <div class="search-result-excerpt">${escapeHtml(post.excerpt)}</div>
+        content.innerHTML = `
+          <div class="fade-in" style="max-width:var(--content-width);margin:0 auto;">
+            <div class="page-header">
+              <h1>搜索结果</h1>
+              <div class="desc">关键词「${escapeHtml(query)}」· 找到 ${sorted.length} 篇文章</div>
+            </div>
+            <div class="post-list" id="postList"></div>
+          </div>
+        `;
+
+        const list = document.getElementById('postList');
+        list.innerHTML = sorted.map(post => `
+          <div class="post-row" onclick="navigate('post/${encodeURIComponent(post.id)}')">
+            <div class="post-row-meta">
+              <span>${formatDateShort(post.date)}</span>
+              <span class="dot"></span>
+              <span>${post.readingTime} 分钟</span>
+            </div>
+            <h3 class="post-row-title">${escapeHtml(post.title)}</h3>
+            <p class="post-row-excerpt">${escapeHtml(post.excerpt)}</p>
+            <div class="post-row-tags">
+              ${post.tags.map(tag => `<span class="tag-mini" onclick="event.stopPropagation(); navigate('tag/${encodeURIComponent(tag)}')">${escapeHtml(tag)}</span>`).join('')}
+            </div>
           </div>
         `).join('');
       }
     }, 200);
   });
 
-  // 点击外部关闭搜索
-  document.addEventListener('click', (e) => {
-    const header = document.querySelector('.header-search');
-    const results = document.getElementById('searchResults');
-    if (header && !header.contains(e.target) && results && !results.contains(e.target)) {
-      closeSearch();
-    }
-  });
-
-  // ESC 关闭
+  // ESC 清空搜索
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeSearch();
+    if (e.key === 'Escape') {
+      input.value = '';
+      input.blur();
+      renderView();
+    }
   });
 }
 
@@ -198,12 +209,12 @@ async function renderHome(container) {
   const posts = await PostLoader.loadAllPosts();
   const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  document.title = '字由 — 写字的自由';
+  document.title = '拾柴记 — 一点一滴，记录生活';
 
   container.innerHTML = `
     <div class="home-hero fade-in">
-      <h1>字<span class="accent">由</span></h1>
-      <p class="tagline">写字的自由</p>
+      <h1>拾柴<span class="accent">记</span></h1>
+      <p class="tagline">一点一滴，记录生活</p>
     </div>
     <div class="list-header">
       <h2>文章</h2>
@@ -236,7 +247,7 @@ async function renderPost(container, postId) {
   const post = await PostLoader.getPostById(postId);
 
   if (!post) {
-    document.title = '文章不存在 — 字由';
+    document.title = '文章不存在 — 拾柴记';
     container.innerHTML = `
       <div class="post-detail">
         <div class="empty-state">
@@ -249,7 +260,7 @@ async function renderPost(container, postId) {
     return;
   }
 
-  document.title = `${post.title} — 字由`;
+  document.title = `${post.title} — 拾柴记`;
 
   const htmlContent = renderMarkdown(post.content);
   const { prev, next } = await PostLoader.getAdjacentPosts(postId);
@@ -296,7 +307,7 @@ async function renderPost(container, postId) {
    ======================================== */
 async function renderTags(container) {
   const tags = await PostLoader.getAllTags();
-  document.title = '标签 — 字由';
+  document.title = '标签 — 拾柴记';
 
   container.innerHTML = `
     <div class="tag-cloud-page fade-in">
@@ -324,7 +335,7 @@ async function renderTagFilter(container, tagName) {
   const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
   const allTags = await PostLoader.getAllTags();
 
-  document.title = `标签: ${tagName} — 字由`;
+  document.title = `标签: ${tagName} — 拾柴记`;
 
   container.innerHTML = `
     <div class="fade-in">
@@ -375,7 +386,7 @@ async function renderTagFilter(container, tagName) {
    视图：关于页面
    ======================================== */
 async function renderAbout(container) {
-  document.title = '关于 — 字由';
+  document.title = '关于 — 拾柴记';
 
   const aboutData = await PostLoader.getAboutContent();
   let aboutHtml = '';
@@ -388,9 +399,9 @@ async function renderAbout(container) {
   container.innerHTML = `
     <div class="about-page fade-in">
       <div class="about-header">
-        <div class="about-avatar">字</div>
-        <h1 class="about-name">字由</h1>
-        <p class="about-bio">写字的自由 · 记录思考与生活</p>
+        <div class="about-avatar">拾</div>
+        <h1 class="about-name">拾柴记</h1>
+        <p class="about-bio">一点一滴，记录生活</p>
       </div>
       <div class="markdown-body">
         ${aboutHtml}
@@ -432,9 +443,8 @@ async function init() {
     console.log('[Init] Loading posts...');
     const posts = await PostLoader.loadAllPosts();
     console.log('[Init] Posts loaded:', posts.length, 'articles');
-    
+
     if (posts.length === 0) {
-      // 如果没有文章，显示明确的诊断信息
       const content = document.getElementById('content');
       content.innerHTML = `
         <div class="empty-state">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>字由 — 写字的自由</title>
+  <title>拾柴记 — 一点一滴，记录生活</title>
   <meta name="description" content="一个关于技术、设计、生活与阅读的个人博客">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
       <a class="site-logo" href="#/" onclick="navigate(''); return false;">
-        字<span class="logo-accent">由</span>
+        拾柴<span class="logo-accent">记</span>
       </a>
       <nav class="site-nav" id="siteNav">
         <a class="nav-link" data-route="" href="#/" onclick="navigate(''); return false;">文章</a>
@@ -24,17 +24,11 @@
         <a class="nav-link" data-route="about" href="#/about" onclick="navigate('about'); return false;">关于</a>
       </nav>
       <div class="header-search">
-        <span class="search-toggle" id="searchToggle" onclick="toggleSearch()">搜索</span>
-        <div class="search-expand" id="searchExpand">
-          <input type="text" class="search-input" id="searchInput" placeholder="输入关键词...">
-          <span class="search-close" onclick="closeSearch()">×</span>
-        </div>
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input-inline" id="searchInput" placeholder="搜索文章...">
       </div>
     </div>
   </header>
-
-  <!-- 搜索结果浮层 -->
-  <div class="search-results" id="searchResults" style="display:none;"></div>
 
   <!-- 主内容区 -->
   <main class="site-main">
@@ -49,9 +43,9 @@
   <!-- 页脚 -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <p class="footer-logo">字由</p>
-      <p class="footer-desc">写字的自由 · 记录思考与生活</p>
-      <p class="footer-copy">&copy; 2026 字由. All rights reserved.</p>
+      <p class="footer-logo">拾柴记</p>
+      <p class="footer-desc">一点一滴，记录生活</p>
+      <p class="footer-copy">&copy; 2026 拾柴记. All rights reserved.</p>
     </div>
   </footer>
 

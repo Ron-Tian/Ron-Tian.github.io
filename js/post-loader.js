@@ -1,5 +1,5 @@
 /**
- * 字由 - Markdown 文件自动加载器
+ * 拾柴记 - Markdown 文件自动加载器
  *
  * 自动加载方案：
  * 1. 优先方案：扫描 posts/ 目录的文件列表（Python http.server 等支持目录列表的服务器）
