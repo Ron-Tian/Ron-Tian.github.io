@@ -14,9 +14,9 @@
    ======================================== */
 const GISCUS_CONFIG = {
   repo: 'Ron-Tian/Ron-Tian.github.io',
-  repoId: 'R_kgDOTVTDvQ',  // ✅ 已自动获取
-  category: 'Comments',    // Discussion 分类名
-  categoryId: '',          // ← 完成下方第 3 步后填入，如 'DIC_kwDOTVTDvQ'
+  repoId: 'R_kgDOTVTDvQ',              // ✅ 已通过 GitHub API 获取
+  category: 'Comments',
+  categoryId: 'DIC_kwDOTVTDvc4DBZ-a',  // ✅ 已通过 GraphQL API 获取
 };
 
 function loadGiscus(container, term) {
