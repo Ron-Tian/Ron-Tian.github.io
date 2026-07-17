@@ -130,7 +130,7 @@ function getRoute() {
   const hash = window.location.hash.slice(1);
   if (!hash || hash === '/') return { view: 'home' };
   const parts = hash.split('/').filter(Boolean);
-  if (parts[0] === 'post' && parts[1]) return { view: 'post', id: parts[1] };
+  if (parts[0] === 'post' && parts[1]) return { view: 'post', id: decodeURIComponent(parts[1]) };
   if (parts[0] === 'tag') return parts[1] ? { view: 'tag', name: decodeURIComponent(parts[1]) } : { view: 'tags' };
   if (parts[0] === 'about') return { view: 'about' };
   return { view: 'home' };
