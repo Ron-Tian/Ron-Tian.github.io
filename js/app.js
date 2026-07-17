@@ -214,6 +214,8 @@ function initSearch() {
 /* ========================================
    渲染视图
    ======================================== */
+let _scrollHandler = null; // 全局 scroll handler 引用，便于清理
+
 async function renderView() {
   const route = getRoute();
   const content = document.getElementById('content');
@@ -222,12 +224,17 @@ async function renderView() {
   progressBar.style.display = route.view === 'post' ? 'block' : 'none';
   updateNavActive(route);
 
-  content.innerHTML = `
-    <div class="loading">
-      <div class="loading-spinner"></div>
-      <p>加载中...</p>
-    </div>
-  `;
+  // 只有真正需要网络请求时才显示 loading
+  // 首页/标签/搜索：manifest 已缓存就不显示 loading
+  const hasCache = PostLoader.loadAllPosts && localStorage.getItem('shichaiji_meta_cache');
+  if (!hasCache) {
+    content.innerHTML = `
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>加载中...</p>
+      </div>
+    `;
+  }
 
   try {
     switch (route.view) {
@@ -354,6 +361,9 @@ async function renderPost(container, postId) {
 
   // 加载 Giscus 评论（用文章 id 作为 discussion 标识）
   loadGiscus(document.getElementById('giscusContainer'), postId);
+
+  // 预加载下一篇文章（后台静默，不阻塞当前渲染）
+  if (next) PostLoader.prefetchPost(next.id);
 }
 
 /* ========================================
@@ -465,20 +475,35 @@ async function renderAbout(container) {
 }
 
 /* ========================================
-   阅读进度条
+   阅读进度条（rAF 节流 + 自动清理旧监听器）
    ======================================== */
 function initReadingProgress() {
   const fill = document.getElementById('progressBarFill');
   if (!fill) return;
 
+  // 清理上一次的 scroll 监听器（避免多次绑定）
+  if (_scrollHandler) {
+    window.removeEventListener('scroll', _scrollHandler);
+    _scrollHandler = null;
+  }
+
+  let ticking = false;
   function updateProgress() {
     const scrollTop = window.scrollY;
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
     const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
     fill.style.width = `${Math.min(100, progress)}%`;
+    ticking = false;
   }
 
-  window.addEventListener('scroll', updateProgress, { passive: true });
+  _scrollHandler = function() {
+    if (!ticking) {
+      requestAnimationFrame(updateProgress);
+      ticking = true;
+    }
+  };
+
+  window.addEventListener('scroll', _scrollHandler, { passive: true });
   updateProgress();
 }
 
@@ -487,39 +512,17 @@ function initReadingProgress() {
    ======================================== */
 async function init() {
   try {
-    console.log('[Init] Starting...');
     configureMarked();
-    console.log('[Init] marked configured, typeof marked =', typeof marked);
     initSearch();
-    console.log('[Init] search initialized');
 
-    // 预加载文章数据
-    console.log('[Init] Loading posts...');
-    const posts = await PostLoader.loadAllPosts();
-    console.log('[Init] Posts loaded:', posts.length, 'articles');
-
-    if (posts.length === 0) {
-      const content = document.getElementById('content');
-      content.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">📭</div>
-          <p>暂未找到文章</p>
-          <p style="margin-top:8px;font-size:0.8rem;color:var(--c-text-3);">
-            可能原因：posts/ 目录为空或 manifest.json 未生成<br>
-            请运行 <code>python scripts/build.py</code> 重新生成
-          </p>
-        </div>
-      `;
-      return;
-    }
+    // 预加载文章元数据（manifest 优先，localStorage 缓存秒开）
+    await PostLoader.loadAllPosts();
 
     // 监听路由变化
     window.addEventListener('hashchange', renderView);
 
     // 首次渲染
-    console.log('[Init] Rendering view...');
     await renderView();
-    console.log('[Init] Done!');
   } catch (err) {
     console.error('[Init] 初始化失败:', err);
     const content = document.getElementById('content');
@@ -529,7 +532,6 @@ async function init() {
           <div class="empty-state-icon">😵</div>
           <p>初始化失败</p>
           <p style="margin-top:8px;font-size:0.8rem;color:var(--c-text-3);">${escapeHtml(err.message || String(err))}</p>
-          <p style="margin-top:12px;font-size:0.75rem;color:var(--c-text-3);">请打开浏览器控制台 (F12) 查看详细错误</p>
         </div>
       `;
     }

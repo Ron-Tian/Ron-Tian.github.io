@@ -1,25 +1,38 @@
 /**
- * 拾柴记 - Markdown 文件自动加载器
+ * 拾柴记 - Markdown 文件自动加载器 v2
  *
- * 自动加载方案：
- * 1. 优先方案：扫描 posts/ 目录的文件列表（Python http.server 等支持目录列表的服务器）
- * 2. 备选方案：读取 posts/manifest.json（由 scripts/build.py 生成，适用于不支持目录列表的静态托管）
- *
- * 每篇文章是独立的 .md 文件，顶部包含 YAML frontmatter 元数据：
- * ---
- * title: 文章标题
- * date: 2026-07-15
- * tags: 标签1, 标签2
- * excerpt: 摘要
- * cover: linear-gradient(...)
- * readingTime: 5
- * ---
- * # Markdown 正文...
+ * 性能优化策略：
+ * 1. 列表页（首页/标签/搜索）只用 manifest.json 元数据（1 个请求）
+ * 2. 文章详情页按需加载单个 .md 正文（懒加载）
+ * 3. localStorage 缓存 manifest 和文章正文，刷新时先渲染缓存再后台更新
  */
 
 const PostLoader = (function () {
-  let _postsCache = null;
-  let _aboutCache = null;
+  const CACHE_KEY_META = 'shichaiji_meta_cache';
+  const CACHE_KEY_POST = 'shichaiji_post_';
+  const CACHE_TTL = 10 * 60 * 1000; // 10 分钟
+
+  let _metaCache = null;   // manifest 元数据列表（不含正文）
+  let _postCache = {};      // { id: { ...meta, content } } 已加载的完整文章
+
+  /* ========================================
+     localStorage 缓存读写
+     ======================================== */
+  function lsGet(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (Date.now() - data.ts > CACHE_TTL) return null;
+      return data.value;
+    } catch { return null; }
+  }
+
+  function lsSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ ts: Date.now(), value }));
+    } catch { /* quota exceeded — ignore */ }
+  }
 
   /* ========================================
      Frontmatter 解析
@@ -27,193 +40,189 @@ const PostLoader = (function () {
   function parseFrontmatter(text) {
     const fmRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
     const match = text.match(fmRegex);
-    if (!match) {
-      return { data: {}, content: text };
-    }
+    if (!match) return { data: {}, content: text };
 
     const data = {};
     const lines = match[1].split(/\r?\n/);
-
     lines.forEach(line => {
       const colonIdx = line.indexOf(':');
       if (colonIdx === -1) return;
       const key = line.slice(0, colonIdx).trim();
       let value = line.slice(colonIdx + 1).trim();
-
-      // 去除引号
       if ((value.startsWith('"') && value.endsWith('"')) ||
           (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
-
       data[key] = value;
     });
-
     return { data, content: match[2] };
   }
 
   /* ========================================
-     从目录列表中提取 .md 文件
+     估算阅读时间
      ======================================== */
-  async function fetchFileList() {
-    const response = await fetch('posts/');
-    if (!response.ok) {
-      throw new Error('无法访问 posts/ 目录');
-    }
-    const html = await response.text();
-
-    // 解析目录列表 HTML，提取 .md 文件链接
-    const mdFiles = [];
-    const linkRegex = /href="([^"]+\.md)"/gi;
-    let match;
-
-    while ((match = linkRegex.exec(html)) !== null) {
-      let filename = match[1];
-      // 处理相对路径
-      filename = filename.split('/').pop();
-      // URL 解码
-      filename = decodeURIComponent(filename);
-      mdFiles.push(filename);
-    }
-
-    return mdFiles;
+  function estimateReadingTime(content) {
+    const plainText = content
+      .replace(/```[\s\S]*?```/g, '').replace(/`[^`]+`/g, '')
+      .replace(/!\[.*?\]\(.*?\)/g, '').replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/[#>*_~|-]/g, '').trim();
+    const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
+    const englishWords = (plainText.match(/[a-zA-Z]+/g) || []).length;
+    return Math.max(1, Math.ceil(chineseChars / 300 + englishWords / 200));
   }
 
   /* ========================================
-     从 manifest.json 加载
+     从 manifest.json 加载元数据（列表页用）
      ======================================== */
   async function fetchManifest() {
+    // 加 bust 参数确保获取最新版本（配合 localStorage 缓存使用）
     const response = await fetch('posts/manifest.json');
-    if (!response.ok) {
-      throw new Error('无法加载 manifest.json');
-    }
+    if (!response.ok) throw new Error('无法加载 manifest.json');
     return response.json();
   }
 
   /* ========================================
-     加载单个 .md 文件并解析
+     从目录列表中提取 .md 文件（备选）
      ======================================== */
-  async function fetchPost(filename) {
-    const response = await fetch(`posts/${encodeURIComponent(filename)}`);
-    if (!response.ok) {
-      throw new Error(`无法加载文章: ${filename}`);
+  async function fetchFileList() {
+    const response = await fetch('posts/');
+    if (!response.ok) throw new Error('无法访问 posts/ 目录');
+    const html = await response.text();
+    const mdFiles = [];
+    const linkRegex = /href="([^"]+\.md)"/gi;
+    let match;
+    while ((match = linkRegex.exec(html)) !== null) {
+      mdFiles.push(decodeURIComponent(match[1].split('/').pop()));
     }
+    return mdFiles;
+  }
+
+  /* ========================================
+     加载单个 .md 文件并解析（文章详情页用）
+     ======================================== */
+  async function fetchPostContent(file) {
+    const response = await fetch(`posts/${encodeURIComponent(file)}`);
+    if (!response.ok) throw new Error(`无法加载文章: ${file}`);
     const text = await response.text();
     const { data, content } = parseFrontmatter(text);
+    return {
+      content,
+      readingTime: parseInt(data.readingTime) || estimateReadingTime(content)
+    };
+  }
 
-    // 从文件名生成 ID（去掉 .md 后缀）
-    const id = filename.replace(/\.md$/, '');
+  /* ========================================
+     加载所有文章元数据（不含正文）
+     ======================================== */
+  async function loadAllPosts() {
+    if (_metaCache) return _metaCache;
 
+    // 1. 先尝试 localStorage 缓存（刷新页面时秒开）
+    const cached = lsGet(CACHE_KEY_META);
+    if (cached && cached.length > 0) {
+      _metaCache = cached.filter(p => p.type !== 'page');
+      // 后台静默更新（不阻塞渲染）
+      fetchManifest().then(manifest => {
+        const posts = extractPostsFromManifest(manifest);
+        if (posts && posts.length > 0) {
+          _metaCache = posts.filter(p => p.type !== 'page');
+          lsSet(CACHE_KEY_META, posts);
+        }
+      }).catch(() => {});
+      return _metaCache;
+    }
+
+    // 2. 无缓存，从 manifest 加载
+    let manifest;
+    try {
+      manifest = await fetchManifest();
+    } catch (e) {
+      // 备选：目录列表（仅本地开发有效）
+      const filenames = await fetchFileList();
+      const results = await Promise.allSettled(
+        filenames.map(async f => {
+          const { content } = await fetchPostContent(f);
+          const { data } = parseFrontmatter(content);
+          return buildMetaFromFrontmatter(f, data);
+        })
+      );
+      _metaCache = results.filter(r => r.status === 'fulfilled')
+        .map(r => r.value).filter(p => p.type !== 'page');
+      return _metaCache;
+    }
+
+    _metaCache = extractPostsFromManifest(manifest).filter(p => p.type !== 'page');
+    lsSet(CACHE_KEY_META, extractPostsFromManifest(manifest));
+    return _metaCache;
+  }
+
+  function extractPostsFromManifest(manifest) {
+    if (Array.isArray(manifest)) return manifest;
+    if (manifest.posts && Array.isArray(manifest.posts)) return manifest.posts;
+    return [];
+  }
+
+  function buildMetaFromFrontmatter(file, data) {
+    const id = file.replace(/\.md$/, '');
     return {
       id,
+      file,
       title: data.title || id,
       date: data.date || '',
       tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       excerpt: data.excerpt || '',
       cover: data.cover || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      readingTime: parseInt(data.readingTime) || estimateReadingTime(content),
-      type: data.type || 'post',
-      content
+      readingTime: parseInt(data.readingTime) || 5,
+      type: data.type || 'post'
     };
-  }
-
-  /* ========================================
-     估算阅读时间（中文按字数，英文按词数）
-     ======================================== */
-  function estimateReadingTime(content) {
-    // 去除 Markdown 语法标记
-    const plainText = content
-      .replace(/```[\s\S]*?```/g, '')   // 代码块
-      .replace(/`[^`]+`/g, '')           // 行内代码
-      .replace(/!\[.*?\]\(.*?\)/g, '')   // 图片
-      .replace(/\[.*?\]\(.*?\)/g, '')    // 链接
-      .replace(/[#>*_~|-]/g, '')         // 标记符号
-      .trim();
-
-    // 中文字符数
-    const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
-    // 英文词数
-    const englishWords = (plainText.match(/[a-zA-Z]+/g) || []).length;
-
-    // 中文 300 字/分钟，英文 200 词/分钟
-    const minutes = Math.ceil(chineseChars / 300 + englishWords / 200);
-    return Math.max(1, minutes);
-  }
-
-  /* ========================================
-     加载所有文章
-     策略：manifest 优先（最可靠），目录列表备选
-     ======================================== */
-  async function loadAllPosts() {
-    if (_postsCache) return _postsCache;
-
-    let filenames = [];
-    let loadMethod = 'manifest';
-
-    // 方案 1（优先）：从 manifest.json 加载文件列表
-    try {
-      const manifest = await fetchManifest();
-      if (Array.isArray(manifest)) {
-        filenames = manifest;
-      } else if (manifest.posts && Array.isArray(manifest.posts)) {
-        // manifest.posts 是对象数组，提取文件名
-        filenames = manifest.posts.map(p => p.file || p);
-      }
-      if (filenames.length === 0) {
-        throw new Error('manifest 为空');
-      }
-    } catch (e) {
-      console.log('[PostLoader] manifest 不可用，尝试目录列表...', e.message);
-      loadMethod = 'directory';
-
-      // 方案 2（备选）：扫描目录列表
-      try {
-        filenames = await fetchFileList();
-        if (filenames.length === 0) {
-          throw new Error('目录列表为空');
-        }
-      } catch (e2) {
-        console.error('[PostLoader] 目录列表也不可用', e2.message);
-        _postsCache = [];
-        return _postsCache;
-      }
-    }
-
-    console.log(`[PostLoader] 通过 ${loadMethod} 方式发现 ${filenames.length} 个文件:`, filenames);
-
-    // 并行加载所有文件
-    const results = await Promise.allSettled(
-      filenames.map(filename => fetchPost(filename))
-    );
-
-    // 记录失败的文章
-    results.forEach((r, i) => {
-      if (r.status === 'rejected') {
-        console.error(`[PostLoader] 加载失败: ${filenames[i]}`, r.reason);
-      }
-    });
-
-    const posts = results
-      .filter(r => r.status === 'fulfilled')
-      .map(r => r.value);
-
-    console.log(`[PostLoader] 成功加载 ${posts.length} 篇文章`);
-
-    // 分离文章和页面
-    _postsCache = posts.filter(p => p.type !== 'page');
-    _aboutCache = posts.find(p => p.type === 'page');
-
-    return _postsCache;
   }
 
   /* ========================================
      获取关于页面内容
      ======================================== */
   async function getAboutContent() {
-    if (!_postsCache) {
-      await loadAllPosts();
+    if (!_metaCache) await loadAllPosts();
+
+    // 从 manifest 找 about 的 file 名
+    const allPosts = _metaCache;
+    // about 可能在 _metaCache 被过滤掉了，从完整 manifest 缓存找
+    const fullCache = lsGet(CACHE_KEY_META) || _metaCache;
+    const aboutMeta = fullCache.find(p => p.type === 'page') || allPosts.find(p => p.type === 'page');
+    if (!aboutMeta) return null;
+
+    // 按需加载正文
+    return await getPostById(aboutMeta.id);
+  }
+
+  /* ========================================
+     按 ID 获取单篇文章（含正文，懒加载）
+     ======================================== */
+  async function getPostById(id) {
+    // 1. 内存缓存
+    if (_postCache[id]) return _postCache[id];
+
+    // 2. localStorage 缓存
+    const cachedPost = lsGet(CACHE_KEY_POST + id);
+    if (cachedPost) {
+      _postCache[id] = cachedPost;
+      return cachedPost;
     }
-    return _aboutCache;
+
+    // 3. 确保元数据已加载
+    if (!_metaCache) await loadAllPosts();
+
+    // 从完整 manifest 缓存中找元数据（about 等页面可能被过滤了）
+    const fullCache = lsGet(CACHE_KEY_META) || _metaCache;
+    const meta = fullCache.find(p => p.id === id);
+    if (!meta) return null;
+
+    // 4. 按需加载正文
+    const { content, readingTime } = await fetchPostContent(meta.file);
+    const post = { ...meta, content, readingTime };
+
+    _postCache[id] = post;
+    lsSet(CACHE_KEY_POST + id, post);
+    return post;
   }
 
   /* ========================================
@@ -223,9 +232,7 @@ const PostLoader = (function () {
     const posts = await loadAllPosts();
     const tagCounts = {};
     posts.forEach(post => {
-      post.tags.forEach(tag => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-      });
+      post.tags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
     });
     return Object.entries(tagCounts)
       .sort((a, b) => b[1] - a[1])
@@ -233,15 +240,7 @@ const PostLoader = (function () {
   }
 
   /* ========================================
-     按 ID 获取单篇文章
-     ======================================== */
-  async function getPostById(id) {
-    const posts = await loadAllPosts();
-    return posts.find(p => p.id === id);
-  }
-
-  /* ========================================
-     按标签筛选
+     按标签筛选（只用元数据，不含正文）
      ======================================== */
   async function getPostsByTag(tag) {
     const posts = await loadAllPosts();
@@ -255,7 +254,6 @@ const PostLoader = (function () {
     const posts = await loadAllPosts();
     const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
     const index = sorted.findIndex(p => p.id === currentId);
-
     return {
       prev: index < sorted.length - 1 ? sorted[index + 1] : null,
       next: index > 0 ? sorted[index - 1] : null
@@ -263,35 +261,30 @@ const PostLoader = (function () {
   }
 
   /* ========================================
-     搜索文章
+     搜索文章（只用元数据，不含正文）
      ======================================== */
   async function searchPosts(query) {
     const posts = await loadAllPosts();
     const q = query.toLowerCase().trim();
     if (!q) return posts;
-
     return posts.filter(post =>
       post.title.toLowerCase().includes(q) ||
       post.excerpt.toLowerCase().includes(q) ||
-      post.tags.some(tag => tag.toLowerCase().includes(q)) ||
-      post.content.toLowerCase().includes(q)
+      post.tags.some(tag => tag.toLowerCase().includes(q))
     );
   }
 
-  // 清除缓存（添加文章后调用）
-  function clearCache() {
-    _postsCache = null;
-    _aboutCache = null;
+  /* ========================================
+     预加载文章（后台静默加载，不阻塞）
+     ======================================== */
+  function prefetchPost(id) {
+    if (_postCache[id]) return;
+    getPostById(id).catch(() => {});
   }
 
   return {
-    loadAllPosts,
-    getAboutContent,
-    getAllTags,
-    getPostById,
-    getPostsByTag,
-    getAdjacentPosts,
-    searchPosts,
-    clearCache
+    loadAllPosts, getAboutContent, getAllTags,
+    getPostById, getPostsByTag, getAdjacentPosts,
+    searchPosts, prefetchPost
   };
 })();
