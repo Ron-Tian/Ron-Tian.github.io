@@ -163,31 +163,6 @@ img { max-width: 100%; }
 }
 
 /* -------- 首页 Hero -------- */
-.home-hero {
-  text-align: center;
-  padding: 40px 0 56px;
-  margin-bottom: 8px;
-}
-
-.home-hero h1 {
-  font-family: var(--font-serif);
-  font-size: 2.6rem;
-  font-weight: 700;
-  letter-spacing: -1px;
-  color: var(--c-text);
-}
-
-.home-hero h1 .accent {
-  color: var(--c-accent);
-}
-
-.home-hero .tagline {
-  font-size: 1rem;
-  color: var(--c-text-3);
-  margin-top: 10px;
-  letter-spacing: 2px;
-}
-
 /* -------- 文章列表 -------- */
 .list-header {
   display: flex;
@@ -791,14 +766,6 @@ img { max-width: 100%; }
     padding: 32px 20px 60px;
   }
 
-  .home-hero {
-    padding: 24px 0 40px;
-  }
-
-  .home-hero h1 {
-    font-size: 2rem;
-  }
-
   .post-row-title {
     font-size: 1.2rem;
   }
@@ -825,10 +792,6 @@ img { max-width: 100%; }
   .nav-link {
     padding: 4px 8px;
     font-size: 12px;
-  }
-
-  .home-hero h1 {
-    font-size: 1.7rem;
   }
 
   .list-header h2 {

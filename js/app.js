@@ -288,10 +288,6 @@ async function renderHome(container) {
   document.title = '拾柴记 — 一点一滴，记录生活';
 
   container.innerHTML = `
-    <div class="home-hero fade-in">
-      <h1>拾柴<span class="accent">记</span></h1>
-      <p class="tagline">一点一滴，记录生活</p>
-    </div>
     <div class="list-header">
       <h2>文章</h2>
       <span class="count">共 ${sorted.length} 篇</span>
