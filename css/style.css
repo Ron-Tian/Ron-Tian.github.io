@@ -196,10 +196,13 @@ img { max-width: 100%; }
   cursor: pointer;
   transition: transform 0.25s var(--ease), background-color 0.25s var(--ease);
   border-radius: 8px;
+  /* 强制 GPU 合成层：避免 hover 时涂层提升延迟导致不触发重绘 */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .post-row:hover {
-  transform: translateX(6px);
+  transform: translateX(6px) translateZ(0);
   background-color: var(--c-bg-hover);
 }
 
