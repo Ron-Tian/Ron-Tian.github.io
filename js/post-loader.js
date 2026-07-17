@@ -211,12 +211,28 @@ const PostLoader = (function () {
     // 3. 确保元数据已加载
     if (!_metaCache) await loadAllPosts();
 
-    // 从完整 manifest 缓存中找元数据（about 等页面可能被过滤了）
-    const fullCache = lsGet(CACHE_KEY_META) || _metaCache;
-    const meta = fullCache.find(p => p.id === id);
+    // 4. 从缓存中找元数据
+    let fullCache = lsGet(CACHE_KEY_META) || _metaCache;
+    let meta = fullCache.find(p => p.id === id);
+
+    // 5. 缓存中找不到 → 强制刷新 manifest（新文章可能还没进缓存）
+    if (!meta) {
+      try {
+        const manifest = await fetchManifest();
+        const posts = extractPostsFromManifest(manifest);
+        if (posts && posts.length > 0) {
+          _metaCache = posts;
+          lsSet(CACHE_KEY_META, posts);
+          meta = posts.find(p => p.id === id);
+        }
+      } catch (e) {
+        console.warn('刷新 manifest 失败:', e);
+      }
+    }
+
     if (!meta) return null;
 
-    // 4. 按需加载正文
+    // 6. 按需加载正文
     const { content, readingTime } = await fetchPostContent(meta.file);
     const post = { ...meta, content, readingTime };
 
