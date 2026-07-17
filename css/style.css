@@ -727,6 +727,17 @@ img { max-width: 100%; }
   min-height: 80px;
 }
 
+.giscus-skeleton {
+  padding: 16px 0;
+  color: var(--c-text-3);
+  font-size: 14px;
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .giscus-frame {
   width: 100%;
   border: none;

@@ -29,6 +29,28 @@ function loadGiscus(container, term) {
     `;
     return;
   }
+
+  // 先放骨架占位，避免 iframe 加载前空白跳动
+  container.innerHTML = '<div class="giscus-skeleton">评论加载中…</div>';
+
+  // 用 IntersectionObserver 懒加载：评论区滚到视口附近才真正加载 Giscus
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, observer) => {
+      if (entries[0].isIntersecting) {
+        observer.disconnect();
+        _injectGiscus(container, term);
+      }
+    }, { rootMargin: '200px' }); // 提前 200px 触发，用户滚到时已加载好
+    io.observe(container);
+    // 保存引用，路由切换时断开（避免旧文章的观察器触发）
+    container._giscusObserver = io;
+  } else {
+    // 降级：直接加载
+    _injectGiscus(container, term);
+  }
+}
+
+function _injectGiscus(container, term) {
   // 清空旧评论（SPA 切换文章时必须重建，否则 iframe 不会刷新）
   container.innerHTML = '';
   const script = document.createElement('script');
