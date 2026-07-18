@@ -2,8 +2,11 @@
 """
 拾柴记 - Manifest 构建脚本
 
-扫描 posts/ 目录下的所有 .md 文件，解析 frontmatter 元数据，
+扫描 posts/ 目录下的所有 .md 和 .pdf 文件，解析 frontmatter 元数据，
 生成 posts/manifest.json 供前端加载。
+
+- .md 文件：frontmatter 直接写在文件头部
+- .pdf 文件：元数据放在同名 .meta 文件中（YAML frontmatter 格式）
 
 使用方法：
     python scripts/build.py
@@ -67,15 +70,10 @@ def main():
         print(f'错误: posts 目录不存在: {posts_dir}')
         sys.exit(1)
 
-    # 递归扫描所有子目录下的 .md 文件
-    md_files = sorted(posts_dir.rglob('*.md'), key=lambda f: str(f).lower())
-
-    if not md_files:
-        print('警告: posts 目录中没有 .md 文件')
-        sys.exit(0)
-
     manifest = {'posts': []}
 
+    # 1. 递归扫描所有子目录下的 .md 文件
+    md_files = sorted(posts_dir.rglob('*.md'), key=lambda f: str(f).lower())
     for md_file in md_files:
         with open(md_file, 'r', encoding='utf-8') as f:
             text = f.read()
@@ -94,10 +92,43 @@ def main():
             'excerpt': data.get('excerpt', ''),
             'cover': data.get('cover', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'),
             'readingTime': int(data.get('readingTime', estimate_reading_time(content))) if data.get('readingTime') else estimate_reading_time(content),
-            'type': data.get('type', 'post')
+            'type': data.get('type', 'post'),
+            'format': 'md'
         }
         manifest['posts'].append(entry)
-        print(f'  ✓ {rel_path} — {entry["title"]}')
+        print(f'  ✓ [MD]  {rel_path} — {entry["title"]}')
+
+    # 2. 递归扫描所有子目录下的 .pdf 文件
+    pdf_files = sorted(posts_dir.rglob('*.pdf'), key=lambda f: str(f).lower())
+    for pdf_file in pdf_files:
+        # 查找同名 .meta 文件（存储 frontmatter 元数据）
+        meta_file = pdf_file.with_suffix('.meta')
+        data = {}
+        if meta_file.exists():
+            with open(meta_file, 'r', encoding='utf-8') as f:
+                meta_text = f.read()
+            data, _ = parse_frontmatter(meta_text)
+
+        rel_path = pdf_file.relative_to(posts_dir).as_posix()
+
+        entry = {
+            'file': rel_path,
+            'id': data.get('id', pdf_file.stem),
+            'title': data.get('title', pdf_file.stem),
+            'date': data.get('date', ''),
+            'tags': [t.strip() for t in data.get('tags', '').split(',') if t.strip()],
+            'excerpt': data.get('excerpt', 'PDF 文档'),
+            'cover': data.get('cover', 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)'),
+            'readingTime': int(data.get('readingTime', 5)) if data.get('readingTime') else 5,
+            'type': data.get('type', 'post'),
+            'format': 'pdf'
+        }
+        manifest['posts'].append(entry)
+        print(f'  ✓ [PDF] {rel_path} — {entry["title"]}')
+
+    if not manifest['posts']:
+        print('警告: posts 目录中没有 .md 或 .pdf 文件')
+        sys.exit(0)
 
     # 写入 manifest.json
     output_path = posts_dir / 'manifest.json'
@@ -106,6 +137,9 @@ def main():
 
     print(f'\n✅ 已生成 {output_path}')
     print(f'   共 {len(manifest["posts"])} 篇文章')
+    md_count = sum(1 for p in manifest['posts'] if p.get('format') == 'md')
+    pdf_count = sum(1 for p in manifest['posts'] if p.get('format') == 'pdf')
+    print(f'   Markdown: {md_count} 篇 | PDF: {pdf_count} 篇')
 
 
 if __name__ == '__main__':

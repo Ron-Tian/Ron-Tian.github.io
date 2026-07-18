@@ -322,6 +322,7 @@ function initSearch() {
               <span>${formatDateShort(post.date)}</span>
               <span class="dot"></span>
               <span>${post.readingTime} 分钟</span>
+              ${post.format === 'pdf' ? '<span class="dot"></span><span class="format-badge pdf">PDF</span>' : ''}
             </div>
             <h3 class="post-row-title">${escapeHtml(post.title)}</h3>
             <p class="post-row-excerpt">${escapeHtml(post.excerpt)}</p>
@@ -423,6 +424,7 @@ async function renderHome(container) {
         <span>${formatDateShort(post.date)}</span>
         <span class="dot"></span>
         <span>${post.readingTime} 分钟</span>
+        ${post.format === 'pdf' ? '<span class="dot"></span><span class="format-badge pdf">PDF</span>' : ''}
       </div>
       <h3 class="post-row-title">${escapeHtml(post.title)}</h3>
       <p class="post-row-excerpt">${escapeHtml(post.excerpt)}</p>
@@ -455,8 +457,57 @@ async function renderPost(container, postId) {
 
   document.title = `${post.title} — 拾柴记`;
 
-  const htmlContent = renderMarkdown(post.content);
   const { prev, next } = await PostLoader.getAdjacentPosts(postId);
+
+  // PDF 文章：用 iframe 内嵌浏览器原生 PDF 阅读器
+  if (post.format === 'pdf') {
+    container.innerHTML = `
+      <div class="post-detail fade-in">
+        <a class="back-link" onclick="navigate('')">← 返回</a>
+        <div class="post-detail-header">
+          <div class="post-detail-tags">
+            <span class="format-badge pdf">PDF</span>
+            ${post.tags.map(tag => `<span class="tag-mini" onclick="navigate('tag/${encodeURIComponent(tag)}')">${escapeHtml(tag)}</span>`).join('')}
+          </div>
+          <h1 class="post-detail-title">${escapeHtml(post.title)}</h1>
+          <div class="post-detail-meta">
+            <span>${formatDate(post.date)}</span>
+            <span class="dot"></span>
+            <a href="${post.pdfUrl}" download class="pdf-download-link">下载 PDF</a>
+          </div>
+        </div>
+        <div class="pdf-viewer-wrapper">
+          <iframe src="${post.pdfUrl}" class="pdf-viewer" title="${escapeHtml(post.title)}"></iframe>
+        </div>
+        <nav class="post-nav">
+          ${prev ? `
+            <div class="post-nav-item prev" onclick="navigate('post/${encodeURIComponent(prev.id)}')">
+              <div class="post-nav-label">← 上一篇</div>
+              <div class="post-nav-title">${escapeHtml(prev.title)}</div>
+            </div>
+          ` : '<div></div>'}
+          ${next ? `
+            <div class="post-nav-item next" onclick="navigate('post/${encodeURIComponent(next.id)}')">
+              <div class="post-nav-label">下一篇 →</div>
+              <div class="post-nav-title">${escapeHtml(next.title)}</div>
+            </div>
+          ` : '<div></div>'}
+        </nav>
+        <section class="comments-section">
+          <h2 class="comments-title">评论</h2>
+          <div class="giscus" id="giscusContainer"></div>
+        </section>
+      </div>
+    `;
+
+    initReadingProgress();
+    loadGiscus(document.getElementById('giscusContainer'), postId);
+    if (next) PostLoader.prefetchPost(next.id);
+    return;
+  }
+
+  // Markdown 文章：渲染正文
+  const htmlContent = renderMarkdown(post.content);
 
   container.innerHTML = `
     <div class="post-detail fade-in">

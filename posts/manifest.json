@@ -11,7 +11,8 @@
       "excerpt": "关于博主和这个博客",
       "cover": "linear-gradient(135deg, #e85d3c 0%, #f0a060 100%)",
       "readingTime": 3,
-      "type": "page"
+      "type": "page",
+      "format": "md"
     },
     {
       "file": "C++/C++  新标准【C++】.md",
@@ -25,7 +26,8 @@
       "excerpt": "介绍 C++11/14/17 引入的关键新特性：强类型枚举、emplace 操作、auto 类型推导等。",
       "cover": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/C++ 四种强制类型转换【C++】.md",
@@ -39,7 +41,8 @@
       "excerpt": "static_cast、const_cast、dynamic_cast、reinterpret_cast 四种类型转换的使用场景与区别。",
       "cover": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       "readingTime": 3,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/C++ 基础 【C++】.md",
@@ -53,7 +56,8 @@
       "excerpt": "C++ 基础概念：引用与指针的区别、const 限定符、内存管理等核心知识点。",
       "cover": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
       "readingTime": 37,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/C++ 线程池【C++】.md",
@@ -68,7 +72,8 @@
       "excerpt": "C++ 线程池的完整实现，包括任务队列、工作线程管理、同步机制等。",
       "cover": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/C++11多线程中std__call_once的使用【C++】.md",
@@ -82,7 +87,8 @@
       "excerpt": "std::call_once 配合 std::once_flag 保证多线程环境下函数只执行一次，常用于线程安全的单例模式。",
       "cover": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/main函数里的argc和argv【C++】.md",
@@ -96,7 +102,8 @@
       "excerpt": "main 函数参数 argc 和 argv 的含义与使用方法，命令行参数的传递机制。",
       "cover": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/“接口”与“实现”分离的方式【C++】.md",
@@ -110,7 +117,8 @@
       "excerpt": "C++ 中接口与实现分离的两种方法：Pimpl Idiom 和抽象类接口（Object Interface）。",
       "cover": "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/共享锁【C++】.md",
@@ -124,7 +132,8 @@
       "excerpt": "std::shared_mutex 与 std::shared_lock 实现读写锁，允许多读单写场景下的高效并发。",
       "cover": "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/单例模式【C++】.md",
@@ -138,7 +147,8 @@
       "excerpt": "单例模式：保证一个类只有一个实例，提供全局访问节点。多种实现方式及线程安全讨论。",
       "cover": "linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)",
       "readingTime": 11,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/工厂模式【C++】.md",
@@ -152,7 +162,8 @@
       "excerpt": "简单工厂、工厂方法、抽象工厂三种工厂模式的结构、应用场景与优缺点对比。",
       "cover": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
       "readingTime": 7,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/智能指针【C++】.md",
@@ -166,7 +177,8 @@
       "excerpt": "auto_ptr、unique_ptr、shared_ptr、weak_ptr 四种智能指针的原理、用法与最佳实践。",
       "cover": "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
       "readingTime": 52,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/条件变量【C++】.md",
@@ -180,7 +192,8 @@
       "excerpt": "条件变量实现线程间通信，配合互斥量实现等待-通知机制。",
       "cover": "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)",
       "readingTime": 2,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/死锁 【C++】.md",
@@ -194,7 +207,8 @@
       "excerpt": "死锁的定义、产生条件、常见场景及避免策略。",
       "cover": "linear-gradient(135deg, #f5576c 0%, #f093fb 100%)",
       "readingTime": 11,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/观察者模式【C++】.md",
@@ -208,7 +222,8 @@
       "excerpt": "观察者模式：定义订阅机制，在对象状态变化时通知多个观察者，实现发布-订阅解耦。",
       "cover": "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)",
       "readingTime": 4,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/设计模式.md",
@@ -222,7 +237,8 @@
       "excerpt": "设计模式概述：23 种设计模式的分类（创建型、结构型、行为型）及各自的意义。",
       "cover": "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)",
       "readingTime": 6,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/远程开_关机【C++】.md",
@@ -236,7 +252,8 @@
       "excerpt": "通过局域网唤醒（Wake-on-LAN）实现远程开机，通过套接字编程实现远程关机。",
       "cover": "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
       "readingTime": 6,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "C++/迭代器失效怎么解决【C++】.md",
@@ -250,7 +267,8 @@
       "excerpt": "序列式容器和关联式容器迭代器失效的不同处理方式，erase 返回下一个有效迭代器。",
       "cover": "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
       "readingTime": 1,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "git-workflow.md",
@@ -264,7 +282,8 @@
       "excerpt": "从 commit 规范到分支策略，打造高效的团队协作 Git 工作流。",
       "cover": "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
       "readingTime": 11,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "hello-world.md",
@@ -278,7 +297,8 @@
       "excerpt": "每一段旅程都始于第一步。这是我的第一篇博文，记录下搭建这个博客的初心与思考。",
       "cover": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       "readingTime": 5,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "javascript-async.md",
@@ -292,7 +312,8 @@
       "excerpt": "从回调到 Promise 再到 async/await，梳理 JavaScript 异步编程的演进脉络和最佳实践。",
       "cover": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
       "readingTime": 12,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "markdown-guide.md",
@@ -306,7 +327,8 @@
       "excerpt": "Markdown 是一种轻量级标记语言，让你专注于内容而非排版。本文全面介绍 Markdown 语法。",
       "cover": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       "readingTime": 10,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "minimalist-design.md",
@@ -320,7 +342,8 @@
       "excerpt": "极简不是空洞，而是精准。探讨极简主义设计背后的理念和它在数字产品中的应用。",
       "cover": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
       "readingTime": 7,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "reading-notes-2026.md",
@@ -334,7 +357,8 @@
       "excerpt": "整理了上半年读过的几本好书，涵盖认知科学、文学、历史和自我成长领域。",
       "cover": "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)",
       "readingTime": 8,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "responsive-design.md",
@@ -349,7 +373,8 @@
       "excerpt": "移动优先、流式布局、媒体查询——构建适配所有屏幕的现代网页。",
       "cover": "linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)",
       "readingTime": 9,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "travel-kyoto.md",
@@ -363,7 +388,8 @@
       "excerpt": "一座城市最动人的不是景点，而是那些不经意间遇见的角落。记录京都之行的点滴。",
       "cover": "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
       "readingTime": 6,
-      "type": "post"
+      "type": "post",
+      "format": "md"
     },
     {
       "file": "经典语录.md",
@@ -377,7 +403,23 @@
       "excerpt": "收集一些触动内心的句子——关于傲慢、靠谱、豁达与精神内耗。",
       "cover": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       "readingTime": 2,
-      "type": "post"
+      "type": "post",
+      "format": "md"
+    },
+    {
+      "file": "test-pdf-article.pdf",
+      "id": "test-pdf-article",
+      "title": "PDF 文章示例",
+      "date": "2026-07-18",
+      "tags": [
+        "测试",
+        "PDF"
+      ],
+      "excerpt": "这是一篇 PDF 格式的文章，用于演示博客的 PDF 内嵌预览功能",
+      "cover": "linear-gradient(135deg, #f5576c 0%, #f093fb 100%)",
+      "readingTime": 3,
+      "type": "post",
+      "format": "pdf"
     }
   ]
 }

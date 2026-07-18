@@ -234,7 +234,17 @@ const PostLoader = (function () {
 
     if (!meta) return null;
 
-    // 6. 按需加载正文
+    // 6. PDF 文章：不需要加载 Markdown 正文，直接返回元数据 + pdfUrl
+    if (meta.format === 'pdf') {
+      // 分段编码路径，保留 / 分隔符
+      const encodedFile = meta.file.split('/').map(encodeURIComponent).join('/');
+      const post = { ...meta, content: '', pdfUrl: `posts/${encodedFile}` };
+      _postCache[id] = post;
+      lsSet(CACHE_KEY_POST + id, post);
+      return post;
+    }
+
+    // 7. Markdown 文章：按需加载正文
     const { content, readingTime } = await fetchPostContent(meta.file);
     const post = { ...meta, content, readingTime };
 
