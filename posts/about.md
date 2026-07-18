@@ -8,11 +8,11 @@ readingTime: 3
 type: page
 ---
 
-## 关于「拾柴记」
+## 关于「小午子的成长笔记」
 
-**拾柴记** — 拾柴积薪，一点一滴。
+**小午子的成长笔记** — 记录成长，一点一滴。
 
-写作就像拾柴，一根一根捡起来，慢慢攒成一堆能取暖的火。不急不躁，想到什么写什么。
+成长就像写笔记，一天一天记下来，慢慢汇成一段完整的旅程。不急不躁，想到什么写什么。
 
 这里记录我在以下几个方面的探索和思考：
 
@@ -23,7 +23,7 @@ type: page
 
 ## 这个名字
 
-「拾柴记」= 拾柴 + 记 = 一点一点拾起来，记下来
+「小午子的成长笔记」= 小午子的成长 + 笔记 = 记录小午子成长路上的点滴
 
 希望每个来到这里的人，都能感受到那份慢慢积累的踏实感。不焦虑，不浮躁，写就是了。
 
@@ -47,8 +47,8 @@ type: page
 
 ## 联系方式
 
-- Email: hello@shichaiji.blog
-- GitHub: [github.com/shichaiji](https://github.com)
+- Email: hello@xiaowuzi.blog
+- GitHub: [github.com/Ron-Tian](https://github.com/Ron-Tian)
 
 ---
 

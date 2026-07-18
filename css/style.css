@@ -1,5 +1,5 @@
 /* ========================================
-   拾柴记 - 个人博客样式 v3
+   小午子的成长笔记 - 个人博客样式 v3
    内容驱动的网站风格：顶部导航 + 居中阅读
    ======================================== */
 
@@ -972,7 +972,15 @@ img { max-width: 100%; }
 
 @media (max-width: 480px) {
   .site-logo {
-    font-size: 18px;
+    font-size: 15px;
+  }
+
+  .search-input-inline {
+    width: 90px;
+  }
+
+  .search-input-inline:focus {
+    width: 120px;
   }
 
   .nav-link {

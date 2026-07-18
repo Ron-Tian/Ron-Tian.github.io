@@ -1,5 +1,5 @@
 /**
- * 拾柴记 - Markdown 文件自动加载器 v2
+ * 小午子的成长笔记 - Markdown 文件自动加载器 v2
  *
  * 性能优化策略：
  * 1. 列表页（首页/标签/搜索）只用 manifest.json 元数据（1 个请求）
@@ -8,8 +8,8 @@
  */
 
 const PostLoader = (function () {
-  const CACHE_KEY_META = 'shichaiji_meta_cache';
-  const CACHE_KEY_POST = 'shichaiji_post_';
+  const CACHE_KEY_META = 'xiaowuzi_meta_cache';
+  const CACHE_KEY_POST = 'xiaowuzi_post_';
   const CACHE_TTL = 10 * 60 * 1000; // 10 分钟
 
   let _metaCache = null;   // manifest 元数据列表（不含正文）

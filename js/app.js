@@ -1,5 +1,5 @@
 /**
- * 拾柴记 - SPA 应用主逻辑 v3
+ * 小午子的成长笔记 - SPA 应用主逻辑 v3
  * 顶部导航 + 居中内容的网站风格
  * Hash 路由：#/  #/post/:id  #/tag  #/tag/:name  #/about
  */
@@ -286,7 +286,7 @@ function initSearch() {
       const posts = await PostLoader.searchPosts(query);
       const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      document.title = `搜索: ${query} — 拾柴记`;
+      document.title = `搜索: ${query} — 小午子的成长笔记`;
       // 搜索时不高亮导航
       document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
@@ -370,7 +370,7 @@ async function renderView() {
 
   // 只有真正需要网络请求时才显示 loading
   // 首页/标签/搜索：manifest 已缓存就不显示 loading
-  const hasCache = PostLoader.loadAllPosts && localStorage.getItem('shichaiji_meta_cache');
+  const hasCache = PostLoader.loadAllPosts && localStorage.getItem('xiaowuzi_meta_cache');
   if (!hasCache) {
     content.innerHTML = `
       <div class="loading">
@@ -407,7 +407,7 @@ async function renderHome(container) {
   const posts = await PostLoader.loadAllPosts();
   const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  document.title = '拾柴记 — 一点一滴，记录生活';
+  document.title = '小午子的成长笔记 — 一点一滴，记录生活';
 
   container.innerHTML = `
     <div class="list-header">
@@ -442,7 +442,7 @@ async function renderPost(container, postId) {
   const post = await PostLoader.getPostById(postId);
 
   if (!post) {
-    document.title = '文章不存在 — 拾柴记';
+    document.title = '文章不存在 — 小午子的成长笔记';
     container.innerHTML = `
       <div class="post-detail">
         <div class="empty-state">
@@ -455,7 +455,7 @@ async function renderPost(container, postId) {
     return;
   }
 
-  document.title = `${post.title} — 拾柴记`;
+  document.title = `${post.title} — 小午子的成长笔记`;
 
   const { prev, next } = await PostLoader.getAdjacentPosts(postId);
 
@@ -569,7 +569,7 @@ async function renderPost(container, postId) {
    ======================================== */
 async function renderTags(container) {
   const tags = await PostLoader.getAllTags();
-  document.title = '标签 — 拾柴记';
+  document.title = '标签 — 小午子的成长笔记';
 
   container.innerHTML = `
     <div class="tag-cloud-page fade-in">
@@ -597,7 +597,7 @@ async function renderTagFilter(container, tagName) {
   const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
   const allTags = await PostLoader.getAllTags();
 
-  document.title = `标签: ${tagName} — 拾柴记`;
+  document.title = `标签: ${tagName} — 小午子的成长笔记`;
 
   container.innerHTML = `
     <div class="fade-in">
@@ -648,7 +648,7 @@ async function renderTagFilter(container, tagName) {
    视图：关于页面
    ======================================== */
 async function renderAbout(container) {
-  document.title = '关于 — 拾柴记';
+  document.title = '关于 — 小午子的成长笔记';
 
   const aboutData = await PostLoader.getAboutContent();
   let aboutHtml = '';
@@ -661,8 +661,8 @@ async function renderAbout(container) {
   container.innerHTML = `
     <div class="about-page fade-in">
       <div class="about-header">
-        <div class="about-avatar">拾</div>
-        <h1 class="about-name">拾柴记</h1>
+        <div class="about-avatar">小</div>
+        <h1 class="about-name">小午子的成长笔记</h1>
         <p class="about-bio">一点一滴，记录生活</p>
       </div>
       <div class="markdown-body">
