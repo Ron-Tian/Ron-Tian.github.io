@@ -21,7 +21,7 @@
 
   /* 尺寸 */
   --content-width: 680px;
-  --list-width: 760px;
+  --list-width: 960px;
   --header-height: 60px;
 
   /* 字体 */
@@ -163,6 +163,151 @@ img { max-width: 100%; }
 }
 
 /* -------- 首页 Hero -------- */
+.home-hero {
+  text-align: center;
+  padding: 56px 32px 40px;
+  margin: -48px -32px 40px;
+  background: var(--c-bg-soft);
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.home-hero-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--c-text);
+}
+
+.home-hero-title .accent {
+  color: var(--c-accent);
+}
+
+.home-hero-tagline {
+  font-size: 1rem;
+  color: var(--c-text-2);
+  margin-bottom: 24px;
+}
+
+.home-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+}
+
+.home-stat {
+  text-align: center;
+}
+
+.home-stat-num {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--c-accent);
+  line-height: 1;
+}
+
+.home-stat-label {
+  font-size: 13px;
+  color: var(--c-text-3);
+  margin-top: 6px;
+}
+
+/* -------- 首页两栏布局 -------- */
+.home-layout {
+  display: flex;
+  gap: 40px;
+}
+
+.home-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  padding-top: 8px;
+}
+
+/* -------- 侧边栏 -------- */
+.sidebar-section {
+  margin-bottom: 32px;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+.sidebar-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sidebar-tag {
+  font-size: 13px;
+  color: var(--c-text-2);
+  background: var(--c-bg-soft);
+  padding: 5px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-tag:hover {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.sidebar-tag .count {
+  font-size: 11px;
+  color: var(--c-text-3);
+}
+
+.sidebar-about {
+  background: var(--c-bg-soft);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.sidebar-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.sidebar-about-name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sidebar-about-bio {
+  font-size: 13px;
+  color: var(--c-text-3);
+  line-height: 1.5;
+}
+
 /* -------- 文章列表 -------- */
 .list-header {
   display: flex;
@@ -190,11 +335,10 @@ img { max-width: 100%; }
 }
 
 .post-row {
-  padding: 28px 16px;
-  margin: 0 -16px;
+  padding: 20px 0;
   border-bottom: 1px solid var(--c-border-light);
   cursor: pointer;
-  transition: transform 0.25s var(--ease), background-color 0.25s var(--ease);
+  transition: all 0.25s var(--ease);
   border-radius: 8px;
   /* 强制 GPU 合成层：避免 hover 时涂层提升延迟导致不触发重绘 */
   transform: translateZ(0);
@@ -202,8 +346,12 @@ img { max-width: 100%; }
 }
 
 .post-row:hover {
-  transform: translateX(6px) translateZ(0);
+  transform: translateX(4px) translateZ(0);
   background-color: var(--c-bg-hover);
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-left: -12px;
+  margin-right: -12px;
 }
 
 .post-row:hover .post-row-title {
@@ -909,6 +1057,24 @@ img { max-width: 100%; }
   .post-toc {
     display: none;
   }
+
+  .home-sidebar {
+    display: none;
+  }
+
+  .home-layout {
+    display: block;
+  }
+
+  .home-hero {
+    margin: -32px -20px 32px;
+  }
+}
+
+@media (max-width: 960px) {
+  .content {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -934,6 +1100,23 @@ img { max-width: 100%; }
 
   .search-input-inline:focus {
     width: 150px;
+  }
+
+  .home-hero {
+    padding: 36px 20px 28px;
+    margin: -32px -20px 28px;
+  }
+
+  .home-hero-title {
+    font-size: 1.5rem;
+  }
+
+  .home-stats {
+    gap: 28px;
+  }
+
+  .home-stat-num {
+    font-size: 1.4rem;
   }
 
   .content {

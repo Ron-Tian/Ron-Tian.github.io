@@ -406,15 +406,62 @@ async function renderView() {
 async function renderHome(container) {
   const posts = await PostLoader.loadAllPosts();
   const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const allTags = await PostLoader.getAllTags();
+
+  // 统计标签文章数
+  const tagCounts = {};
+  posts.forEach(p => {
+    p.tags.forEach(tag => {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    });
+  });
+  const topTags = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
 
   document.title = '小午子的成长笔记 — 一点一滴，记录生活';
 
   container.innerHTML = `
-    <div class="list-header">
-      <h2>文章</h2>
-      <span class="count">共 ${sorted.length} 篇</span>
+    <div class="home-hero fade-in">
+      <h1 class="home-hero-title">小午子的成长<span class="accent">笔记</span></h1>
+      <p class="home-hero-tagline">一点一滴，记录生活</p>
+      <div class="home-stats">
+        <div class="home-stat">
+          <div class="home-stat-num">${sorted.length}</div>
+          <div class="home-stat-label">篇文章</div>
+        </div>
+        <div class="home-stat">
+          <div class="home-stat-num">${allTags.length}</div>
+          <div class="home-stat-label">个标签</div>
+        </div>
+        <div class="home-stat">
+          <div class="home-stat-num">${new Date().getFullYear() - 2023 + 1}</div>
+          <div class="home-stat-label">年记录</div>
+        </div>
+      </div>
     </div>
-    <div class="post-list" id="postList"></div>
+    <div class="home-layout">
+      <div class="home-main">
+        <div class="list-header">
+          <h2>最新文章</h2>
+          <span class="count">共 ${sorted.length} 篇</span>
+        </div>
+        <div class="post-list" id="postList"></div>
+      </div>
+      <aside class="home-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-about">
+            <div class="sidebar-avatar">小</div>
+            <div class="sidebar-about-name">小午子的成长笔记</div>
+            <div class="sidebar-about-bio">记录成长，一点一滴。不急不躁，写就是了。</div>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">热门标签</div>
+          <div class="sidebar-tag-list" id="sidebarTags"></div>
+        </div>
+      </aside>
+    </div>
   `;
 
   const list = document.getElementById('postList');
@@ -433,6 +480,16 @@ async function renderHome(container) {
       </div>
     </div>
   `).join('');
+
+  const sidebarTags = document.getElementById('sidebarTags');
+  if (sidebarTags) {
+    sidebarTags.innerHTML = topTags.map(([tag, count]) => `
+      <span class="sidebar-tag" onclick="navigate('tag/${encodeURIComponent(tag)}')">
+        ${escapeHtml(tag)}
+        <span class="count">${count}</span>
+      </span>
+    `).join('');
+  }
 }
 
 /* ========================================
