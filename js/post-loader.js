@@ -101,7 +101,9 @@ const PostLoader = (function () {
      加载单个 .md 文件并解析（文章详情页用）
      ======================================== */
   async function fetchPostContent(file) {
-    const response = await fetch(`posts/${encodeURIComponent(file)}`);
+    // 分段编码：保留路径分隔符 /，只编码每段中的特殊字符
+    const encodedFile = file.split('/').map(encodeURIComponent).join('/');
+    const response = await fetch(`posts/${encodedFile}`);
     if (!response.ok) throw new Error(`无法加载文章: ${file}`);
     const text = await response.text();
     const { data, content } = parseFrontmatter(text);

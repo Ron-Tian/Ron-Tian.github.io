@@ -67,7 +67,8 @@ def main():
         print(f'错误: posts 目录不存在: {posts_dir}')
         sys.exit(1)
 
-    md_files = sorted([f for f in posts_dir.iterdir() if f.suffix == '.md'])
+    # 递归扫描所有子目录下的 .md 文件
+    md_files = sorted(posts_dir.rglob('*.md'), key=lambda f: str(f).lower())
 
     if not md_files:
         print('警告: posts 目录中没有 .md 文件')
@@ -81,9 +82,12 @@ def main():
 
         data, content = parse_frontmatter(text)
 
+        # file 字段存储相对于 posts/ 的路径（如 "C++/智能指针.md"）
+        rel_path = md_file.relative_to(posts_dir).as_posix()
+
         entry = {
-            'file': md_file.name,
-            'id': md_file.stem,
+            'file': rel_path,
+            'id': data.get('id', md_file.stem),
             'title': data.get('title', md_file.stem),
             'date': data.get('date', ''),
             'tags': [t.strip() for t in data.get('tags', '').split(',') if t.strip()],
@@ -93,7 +97,7 @@ def main():
             'type': data.get('type', 'post')
         }
         manifest['posts'].append(entry)
-        print(f'  ✓ {md_file.name} — {entry["title"]}')
+        print(f'  ✓ {rel_path} — {entry["title"]}')
 
     # 写入 manifest.json
     output_path = posts_dir / 'manifest.json'
