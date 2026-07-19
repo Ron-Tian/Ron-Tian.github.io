@@ -22,6 +22,7 @@ import json
 import os
 import sys
 import time
+import random
 from datetime import datetime, timezone, timedelta
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -62,80 +63,108 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "stock", "data")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "valuation.json")
 
-# 请求头（模拟浏览器，避免被拦截）
+# 请求头（模拟真实浏览器，避免被拦截和 502）
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate",
     "Referer": "https://quote.eastmoney.com/",
+    "Connection": "keep-alive",
+    "Cache-Control": "no-cache",
 }
+
+# 备选 API 地址（主地址失败时切换）
+EASTMONEY_HOSTS = [
+    "http://push2.eastmoney.com",
+    "http://push2delay.eastmoney.com",
+    "http://80.push2.eastmoney.com",
+]
 
 
 def fetch_stock_data():
     """
     从东方财富接口分页获取全A股数据。
     接口每次最多返回 100 条，需要分页循环获取全部约 5800+ 只股票。
-    包含重试机制，避免被限流后中断。
+    包含重试机制和备选 API 地址，避免被限流后中断。
+    502 错误通常是东方财富对境外 IP 的间歇性限制，等待几秒后通常恢复。
     """
     print("正在从东方财富获取全A股数据（分页获取）...")
 
     all_stocks = []
     page = 1
     total = 0
-    max_retries = 3
+    pages_needed = "?"
+    max_retries = 5
+    base_retry_wait = 3  # 基础等待秒数，每次重试指数增长
 
     while True:
-        url = EASTMONEY_BASE.format(page=page)
+        success = False
+        last_error = None
 
-        # 重试机制
-        data = None
         for retry in range(max_retries):
-            req = Request(url, headers=HEADERS)
+            host = EASTMONEY_HOSTS[min(retry // 2, len(EASTMONEY_HOSTS) - 1)]
+            url = EASTMONEY_BASE.format(page=page)
+            url = url.replace("http://push2.eastmoney.com", host)
+
             try:
-                with urlopen(req, timeout=30) as resp:
+                req = Request(url, headers=HEADERS)
+                with urlopen(req, timeout=45) as resp:
                     raw = resp.read().decode("utf-8")
                 data = json.loads(raw)
-                break
-            except Exception as e:
-                if retry < max_retries - 1:
-                    wait = 2 * (retry + 1)  # 2s, 4s, 6s
-                    print(f"  ⚠ 第 {page} 页第 {retry+1} 次失败: {e}，{wait}s 后重试...")
-                    time.sleep(wait)
-                else:
-                    print(f"  ❌ 第 {page} 页重试 {max_retries} 次仍失败，跳过")
-                    # 如果已有数据，继续处理；否则退出
-                    if all_stocks:
-                        page += 1
-                        break
-                    else:
-                        sys.exit(1)
 
-        if not data or "data" not in data or not data["data"]:
-            if all_stocks:
-                print(f"  接口无更多数据，停止获取")
+                if not data or "data" not in data:
+                    last_error = "返回数据为空"
+                    wait = base_retry_wait * (2 ** retry) + random.uniform(0, 2)
+                    print(f"  ⚠ 第 {page} 页第 {retry+1} 次数据为空 ({host})，{wait:.0f}s 后重试...")
+                    time.sleep(wait)
+                    continue
+
+                success = True
                 break
+
+            except HTTPError as e:
+                last_error = f"HTTP {e.code}"
+                wait = base_retry_wait * (2 ** retry) + random.uniform(0, 3)
+                print(f"  ⚠ 第 {page} 页第 {retry+1} 次: {last_error} ({host})，{wait:.0f}s 后重试...")
+                time.sleep(wait)
+
+            except Exception as e:
+                last_error = str(e)[:60]
+                wait = base_retry_wait * (2 ** retry) + random.uniform(0, 3)
+                print(f"  ⚠ 第 {page} 页第 {retry+1} 次: {last_error} ({host})，{wait:.0f}s 后重试...")
+                time.sleep(wait)
+
+        if not success:
+            print(f"  ❌ 第 {page} 页重试 {max_retries} 次仍失败（最后错误: {last_error}），跳过")
+            if all_stocks:
+                page += 1
+                time.sleep(1)
+                continue
             else:
-                print("  ❌ 接口返回数据为空")
+                print("  ❌ 首页获取失败，无法继续")
                 sys.exit(1)
 
         diff = data["data"].get("diff", []) or data["data"].get("list", [])
         if not diff:
             break
 
-        # 第一页时获取总数
-        if page == 1:
+        # 记录总数（从第一页或任意返回 total 的页）
+        if total == 0 and data["data"].get("total", 0) > 0:
             total = data["data"].get("total", 0)
-            print(f"  全A股共 {total} 只股票，需获取 {(total + 99) // 100} 页")
+            pages_needed = (total + 99) // 100
+            print(f"  全A股共 {total} 只股票，需获取 {pages_needed} 页")
 
         all_stocks.extend(diff)
 
-        if page % 10 == 0:
-            print(f"  已获取 {page} 页，累计 {len(all_stocks)} 只...")
+        if page % 15 == 0:
+            print(f"  进度: {page}/{pages_needed} 页，已获取 {len(all_stocks)} 只...")
 
-        # 如果已获取全部，退出
-        if len(all_stocks) >= total or len(diff) < 100:
+        if len(all_stocks) >= total > 0 or len(diff) < 100:
             break
 
         page += 1
-        time.sleep(0.5)  # 控制请求频率，避免被限流
+        time.sleep(0.8)
 
     print(f"获取完成：共 {len(all_stocks)} 只股票数据")
     return all_stocks
