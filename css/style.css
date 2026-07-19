@@ -16,8 +16,6 @@
   --c-accent-soft: #fef0ec;
   --c-border: #ececec;
   --c-border-light: #f5f5f5;
-  --code-bg: #1e1e2e;
-  --code-text: #e0e0e0;
 
   /* 尺寸 */
   --content-width: 680px;
@@ -554,19 +552,34 @@ img { max-width: 100%; }
 
 .markdown-body pre {
   margin: 24px 0;
-  padding: 20px 24px;
-  background: var(--code-bg);
-  border-radius: 10px;
+  padding: 0;
+  background: transparent;
+  border-radius: 8px;
   overflow-x: auto;
+  border: 1px solid var(--c-border-light);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   font-size: 14px;
   line-height: 1.6;
 }
 
 .markdown-body pre code {
   background: none;
-  color: var(--code-text);
+  color: #24292e;
   padding: 0;
   font-size: inherit;
+}
+
+/* 覆盖 hljs 主题，统一浅色代码块 */
+.markdown-body pre code.hljs {
+  display: block;
+  padding: 16px 20px;
+  background: #f6f8fa;
+  color: #24292e;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  border-radius: 8px;
+  overflow-x: auto;
 }
 
 .markdown-body table {
@@ -941,18 +954,7 @@ img { max-width: 100%; }
 }
 
 /* -------- 代码高亮微调 -------- */
-.markdown-body pre {
-  border-radius: 8px;
-  overflow-x: auto;
-}
-
-.markdown-body pre code.hljs {
-  padding: 16px 20px;
-  background: var(--c-bg-soft);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 1.6;
-}
+/* hljs 主题在 highlight-theme.css 中定义，此处通过 .markdown-body pre code.hljs 统一覆盖为浅色代码块样式 */
 
 /* -------- 返回顶部按钮 -------- */
 .back-to-top {
