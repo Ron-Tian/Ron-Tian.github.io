@@ -1,24 +1,23 @@
-/* ─── 基础重置 ─── */
+/* ─── 基础 ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0f1117;
-  --bg-card: #1a1d28;
-  --bg-hover: #222633;
-  --border: #2a2e3c;
-  --text: #e4e6eb;
-  --text-dim: #8b8f9a;
-  --text-muted: #5c6070;
-  --red: #ef4444;
-  --red-bg: rgba(239, 68, 68, 0.12);
-  --green: #22c55e;
-  --green-bg: rgba(34, 197, 94, 0.12);
-  --blue: #3b82f6;
-  --blue-bg: rgba(59, 130, 246, 0.12);
-  --yellow: #eab308;
-  --yellow-bg: rgba(234, 179, 8, 0.12);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --bg: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-hover: #f9fafb;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-dim: #6b7280;
+  --text-muted: #9ca3af;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-bg: #eff6ff;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --radius: 10px;
+  --radius-sm: 6px;
 }
 
 html { font-size: 14px; }
@@ -29,6 +28,7 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ─── 顶部导航 ─── */
@@ -36,7 +36,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(15, 17, 23, 0.92);
+  background: rgba(255,255,255,0.88);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
@@ -44,7 +44,7 @@ body {
 .topbar-inner {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 14px 32px;
+  padding: 12px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -54,40 +54,42 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
 }
 
-.brand-icon { font-size: 22px; }
+.brand-icon { font-size: 20px; }
 
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .update-time {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
 /* ─── 按钮 ─── */
 .btn {
-  padding: 7px 16px;
+  padding: 6px 14px;
   border: none;
   border-radius: var(--radius-sm);
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
 }
 
 .btn-primary {
-  background: var(--blue);
+  background: var(--accent);
   color: #fff;
 }
-.btn-primary:hover { background: #2563eb; }
+.btn-primary:hover { background: var(--accent-hover); }
 
 .btn-ghost {
   background: transparent;
@@ -108,81 +110,82 @@ body {
   background: transparent;
   color: var(--red);
   border: 1px solid var(--border);
+  font-size: 12px;
 }
-.btn-danger:hover { background: var(--red-bg); }
+.btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
 
 /* ─── 输入框 ─── */
 .input {
   padding: 7px 12px;
-  background: var(--bg-card);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 13px;
-  width: 260px;
+  width: 280px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s;
 }
-.input:focus { border-color: var(--blue); }
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 .input::placeholder { color: var(--text-muted); }
 
-/* ─── 容器与区块 ─── */
+/* ─── 容器 ─── */
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px 32px;
+  padding: 28px 32px;
 }
+.container + .container { padding-top: 0; }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .section-header h2 {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .section-hint {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
-}
-
-.watchlist-add {
-  display: flex;
-  gap: 8px;
 }
 
 /* ─── 大盘指数卡片 ─── */
 .indices-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* 固定5列，等宽 */
-  gap: 12px; /* 减小间距 */
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
 }
 
 .index-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 12px; /* 减小padding */
-  transition: border-color 0.2s;
+  padding: 16px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.index-card:hover { border-color: var(--text-muted); }
+.index-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
 
 .index-name {
-  font-size: 13px; /* 从15px缩小 */
+  font-size: 12px;
   color: var(--text-dim);
-  margin-bottom: 6px; /* 从8px减小 */
-  white-space: nowrap; /* 禁止换行 */
+  margin-bottom: 8px;
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* 超长截断 */
+  text-overflow: ellipsis;
 }
 
 .index-price {
-  font-size: 22px; /* 从28px缩小 */
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;
@@ -190,8 +193,8 @@ body {
 }
 
 .index-change {
-  margin-top: 4px; /* 从6px减小 */
-  font-size: 12px; /* 从14px缩小 */
+  margin-top: 4px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -202,26 +205,29 @@ body {
 
 .tag-up {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
   background: var(--red-bg);
   color: var(--red);
 }
 .tag-down {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
   background: var(--green-bg);
   color: var(--green);
 }
 .tag-flat {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 4px;
-  font-size: 12px;
-  background: rgba(139,143,154,0.12);
+  font-size: 11px;
+  font-weight: 500;
+  background: #f3f4f6;
   color: var(--text-dim);
 }
 
@@ -240,122 +246,193 @@ body {
 
 .stock-table th {
   text-align: left;
-  padding: 12px 16px;
-  font-size: 12px;
+  padding: 10px 14px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
+  background: #fafbfc;
   border-bottom: 1px solid var(--border);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .stock-table td {
-  padding: 12px 16px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #f3f4f6;
   font-variant-numeric: tabular-nums;
 }
 
 .stock-table tbody tr:last-child td { border-bottom: none; }
 .stock-table tbody tr:hover { background: var(--bg-hover); }
 
-.stock-name { font-weight: 600; }
-.stock-code { color: var(--text-muted); font-size: 12px; }
+.stock-name { font-weight: 500; color: var(--text); }
+.stock-code {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: "SF Mono", "JetBrains Mono", "Cascadia Code", monospace;
+}
 
 /* ─── 空状态 ─── */
 .empty-state {
-  padding: 40px 24px;
+  padding: 48px 24px;
   text-align: center;
   color: var(--text-dim);
 }
 .empty-state .muted {
   margin-top: 8px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 .empty-state code {
-  background: var(--bg-hover);
+  background: #eef1f5;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
+  font-family: "SF Mono", "JetBrains Mono", monospace;
+  color: var(--text);
+}
+
+/* ─── 自选股添加 ─── */
+.watchlist-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ─── 自选股数量徽章 ─── */
+.count-badge {
+  display: inline-block;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 9px;
+  vertical-align: middle;
 }
 
 /* ─── 概要卡片 ─── */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .summary-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 14px 16px;
 }
 
 .summary-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .summary-value {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 /* ─── 分析报告列表 ─── */
 .analysis-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .analysis-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px 20px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .analysis-info { flex: 1; }
 
 .analysis-name {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
 .analysis-suggestion {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-dim);
 }
 
 .analysis-metrics {
   display: flex;
-  gap: 24px;
-  font-size: 13px;
+  gap: 20px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
 .analysis-metrics span b {
   color: var(--text);
-  font-weight: 600;
+  font-weight: 500;
+}
+
+/* ─── 价值筛选 ─── */
+.valuation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-bottom: 14px;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.valuation-meta .valuation-count b {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.valuation-meta .valuation-cond {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+#valuationTable th[onclick] {
+  user-select: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#valuationTable th[onclick]:hover {
+  background: #eef1f5;
+  color: var(--text);
+}
+
+/* ─── 云端同步状态 ─── */
+.cloud-status {
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--text-muted);
 }
 
 /* ─── 页脚 ─── */
 .footer {
   text-align: center;
-  padding: 32px 24px;
+  padding: 28px 24px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   border-top: 1px solid var(--border);
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 /* ─── 加载动画 ─── */
@@ -364,7 +441,7 @@ body {
   width: 16px;
   height: 16px;
   border: 2px solid var(--border);
-  border-top-color: var(--blue);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -372,75 +449,18 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ─── 响应式 ─── */
-@media (max-width: 768px) {
-  .topbar-inner { padding: 12px 16px; }
-  .container { padding: 16px; }
-  .input { width: 180px; }
-  .indices-grid { grid-template-columns: repeat(3, 1fr); }
-  .analysis-card { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .analysis-metrics { flex-wrap: wrap; gap: 12px; }
-  .stock-table { font-size: 12px; }
-  .stock-table th, .stock-table td { padding: 8px 10px; }
-}
-
 @media (max-width: 1024px) {
   .indices-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ─── 价值筛选板块 ─── */
-.valuation-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  margin-bottom: 16px;
-  padding: 14px 18px;
-  background: var(--bg-card);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 14px;
-  color: var(--text-dim);
-}
-
-.valuation-meta .valuation-count b {
-  color: var(--text);
-  font-size: 16px;
-}
-
-.valuation-meta .valuation-cond {
-  color: var(--text-dim);
-  font-size: 13px;
-}
-
-/* 表头排序可点击效果 */
-#valuationTable th[onclick] {
-  user-select: none;
-  transition: background 0.2s;
-}
-
-#valuationTable th[onclick]:hover {
-  background: var(--bg-hover);
-  color: var(--text);
-}
-
-/* ─── 自选股增强 ─── */
-.count-badge {
-  display: inline-block;
-  min-width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0 6px;
-  margin-left: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  background: var(--accent, #e85d3c);
-  color: #fff;
-  border-radius: 10px;
-  vertical-align: middle;
-}
-
-/* ─── 云端同步状态 ─── */
-.cloud-status {
-  font-size: 12px;
-  white-space: nowrap;
+@media (max-width: 768px) {
+  .topbar-inner { padding: 10px 16px; flex-direction: column; gap: 8px; }
+  .container { padding: 16px; }
+  .input { width: 160px; }
+  .indices-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .analysis-card { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .analysis-metrics { flex-wrap: wrap; gap: 10px; }
+  .stock-table th, .stock-table td { padding: 8px 10px; font-size: 12px; }
+  .index-price { font-size: 18px; }
+  .summary-value { font-size: 18px; }
 }
