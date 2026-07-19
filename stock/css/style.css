@@ -451,3 +451,9 @@ body {
   font-size: 12px;
   padding: 4px 10px;
 }
+
+/* ─── 云端同步状态 ─── */
+.cloud-status {
+  font-size: 12px;
+  white-space: nowrap;
+}

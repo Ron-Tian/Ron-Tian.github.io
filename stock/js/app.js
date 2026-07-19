@@ -21,8 +21,19 @@ const CORS_PROXIES = [
   (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
 ];
 
-// ─── 自选股管理（localStorage 持久化） ───
+// ─── 自选股管理（localStorage 持久化 + 可选云端同步） ───
 const STORAGE_KEY = 'xiaowuzi_stock_watchlist'; // 带项目前缀，避免与其他站点冲突
+
+// 云端同步配置（部署 Cloudflare Worker 后改为 true 并填入 URL 和 API Key）
+// 详见 stock/worker/README.md 部署指南
+const CLOUD_CONFIG = {
+  enabled: false,                                                    // 改为 true 启用
+  workerUrl: '',                                                     // Worker 部署后的 URL
+  apiKey: '',                                                        // 部署时设置的 API_KEY
+};
+
+// 云端同步状态
+let cloudSyncStatus = 'idle'; // idle / syncing / success / error / offline
 
 function getWatchlist() {
   try {
@@ -34,6 +45,92 @@ function getWatchlist() {
 
 function saveWatchlist(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // 异步同步到云端（不阻塞 UI）
+  if (CLOUD_CONFIG.enabled) {
+    syncToCloud(list);
+  }
+}
+
+// ─── 云端同步 ───
+async function syncToCloud(list) {
+  if (!CLOUD_CONFIG.enabled || !CLOUD_CONFIG.workerUrl) return;
+
+  cloudSyncStatus = 'syncing';
+  updateCloudStatus();
+
+  try {
+    const res = await fetch(CLOUD_CONFIG.workerUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': CLOUD_CONFIG.apiKey,
+      },
+      body: JSON.stringify({ stocks: list }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    cloudSyncStatus = 'success';
+  } catch (e) {
+    console.warn('云端同步失败:', e.message);
+    cloudSyncStatus = 'error';
+  }
+  updateCloudStatus();
+}
+
+async function loadFromCloud() {
+  if (!CLOUD_CONFIG.enabled || !CLOUD_CONFIG.workerUrl) return false;
+
+  cloudSyncStatus = 'syncing';
+  updateCloudStatus();
+
+  try {
+    const res = await fetch(CLOUD_CONFIG.workerUrl, {
+      headers: { 'X-API-Key': CLOUD_CONFIG.apiKey },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    if (data.success && Array.isArray(data.stocks)) {
+      // 合并云端和本地（以云端为主，补充本地独有的）
+      const cloudSet = new Set(data.stocks);
+      const local = getWatchlist();
+      const localOnly = local.filter(c => !cloudSet.has(c));
+      const merged = [...data.stocks, ...localOnly];
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      cloudSyncStatus = 'success';
+      updateCloudStatus();
+      return data.stocks.length > 0;
+    }
+  } catch (e) {
+    console.warn('云端加载失败:', e.message);
+    cloudSyncStatus = 'error';
+  }
+  updateCloudStatus();
+  return false;
+}
+
+function updateCloudStatus() {
+  const el = document.getElementById('cloudStatus');
+  if (!el) return;
+
+  const statusMap = {
+    idle:    { icon: '',     text: '',                color: '' },
+    syncing: { icon: '🔄',   text: '同步中...',       color: 'var(--text-dim)' },
+    success: { icon: '☁️',   text: '已同步',          color: 'var(--green)' },
+    error:   { icon: '⚠️',  text: '同步失败',        color: 'var(--red)' },
+  };
+
+  const s = statusMap[cloudSyncStatus] || statusMap.idle;
+  if (s.icon) {
+    el.innerHTML = `<span style="color:${s.color}">${s.icon} ${s.text}</span>`;
+  } else {
+    el.innerHTML = '';
+  }
 }
 
 function addToWatchlist(code) {
@@ -726,12 +823,23 @@ document.getElementById('refreshBtn').addEventListener('click', refreshAll);
 // 1. 从URL参数导入自选股（跨设备迁移）
 loadWatchlistFromUrl();
 
-// 2. 如果仍为空，设置默认自选股
-if (getWatchlist().length === 0) {
-  saveWatchlist(['sh601318', 'sz000001', 'sh600519', 'sz000858', 'sz300750']);
+// 2. 从云端加载（如果启用了 Cloudflare Worker 同步）
+//    云端有数据则合并到本地，然后渲染
+if (CLOUD_CONFIG.enabled) {
+  loadFromCloud().then(() => {
+    // 3. 如果本地和云端都为空，设置默认自选股
+    if (getWatchlist().length === 0) {
+      saveWatchlist(['sh601318', 'sz000001', 'sh600519', 'sz000858', 'sz300750']);
+    }
+    refreshAll();
+  });
+} else {
+  // 未启用云端同步，直接检查本地
+  if (getWatchlist().length === 0) {
+    saveWatchlist(['sh601318', 'sz000001', 'sh600519', 'sz000858', 'sz300750']);
+  }
+  refreshAll();
 }
-
-refreshAll();
 
 // 每 60 秒自动刷新
 setInterval(refreshAll, 60000);
