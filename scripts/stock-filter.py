@@ -81,13 +81,39 @@ EASTMONEY_HOSTS = [
     "http://80.push2.eastmoney.com",
 ]
 
+# Cloudflare Worker 代理（解决 GitHub Actions 境外 IP 被东方财富封锁的问题）
+# Worker 部署在 Cloudflare 全球边缘节点（含香港/东京），不会被拦截
+PROXY_URL = "https://stock-sync.18209242713.workers.dev/proxy/eastmoney"
+PROXY_KEY = "66171d8ad990b900999cfd2ba7f5931b80833e552e9d6549"
+
+
+def _build_urls(page):
+    """构造当前页的所有请求 URL：代理优先，直连备用"""
+    query = EASTMONEY_BASE.format(page=page)
+    # 从完整 URL 中提取路径+参数部分（去掉 http://push2.eastmoney.com 前缀）
+    base_prefix = "http://push2.eastmoney.com"
+    path_and_query = query[len(base_prefix):]  # /api/qt/clist/get?pn=...&pz=...
+
+    urls = []
+
+    # 第一优先级：Cloudflare Worker 代理（解决 GitHub Actions 境外 IP 被东方财富封锁）
+    if PROXY_URL:
+        proxy_url = f"{PROXY_URL}{path_and_query}&key={PROXY_KEY}"
+        urls.append(("代理", proxy_url))
+
+    # 备用：直连东方财富各节点
+    for host in EASTMONEY_HOSTS:
+        direct_url = query.replace("http://push2.eastmoney.com", host)
+        urls.append((host.replace("http://", ""), direct_url))
+
+    return urls
+
 
 def fetch_stock_data():
     """
     从东方财富接口分页获取全A股数据。
     接口每次最多返回 100 条，需要分页循环获取全部约 5800+ 只股票。
-    包含重试机制和备选 API 地址，避免被限流后中断。
-    502 错误通常是东方财富对境外 IP 的间歇性限制，等待几秒后通常恢复。
+    优先通过 Cloudflare Worker 代理（全球边缘节点），失败后回退直连。
     """
     print("正在从东方财富获取全A股数据（分页获取）...")
 
@@ -101,11 +127,11 @@ def fetch_stock_data():
     while True:
         success = False
         last_error = None
+        urls = _build_urls(page)
 
         for retry in range(max_retries):
-            host = EASTMONEY_HOSTS[min(retry // 2, len(EASTMONEY_HOSTS) - 1)]
-            url = EASTMONEY_BASE.format(page=page)
-            url = url.replace("http://push2.eastmoney.com", host)
+            # 按优先级轮换：代理 → push2 → push2delay → 80.push2 → 循环
+            label, url = urls[retry % len(urls)]
 
             try:
                 req = Request(url, headers=HEADERS)
@@ -116,7 +142,7 @@ def fetch_stock_data():
                 if not data or "data" not in data:
                     last_error = "返回数据为空"
                     wait = base_retry_wait * (2 ** retry) + random.uniform(0, 2)
-                    print(f"  ⚠ 第 {page} 页第 {retry+1} 次数据为空 ({host})，{wait:.0f}s 后重试...")
+                    print(f"  ⚠ 第 {page} 页第 {retry+1} 次数据为空 ({label})，{wait:.0f}s 后重试...")
                     time.sleep(wait)
                     continue
 
@@ -126,13 +152,13 @@ def fetch_stock_data():
             except HTTPError as e:
                 last_error = f"HTTP {e.code}"
                 wait = base_retry_wait * (2 ** retry) + random.uniform(0, 3)
-                print(f"  ⚠ 第 {page} 页第 {retry+1} 次: {last_error} ({host})，{wait:.0f}s 后重试...")
+                print(f"  ⚠ 第 {page} 页第 {retry+1} 次: {last_error} ({label})，{wait:.0f}s 后重试...")
                 time.sleep(wait)
 
             except Exception as e:
                 last_error = str(e)[:60]
                 wait = base_retry_wait * (2 ** retry) + random.uniform(0, 3)
-                print(f"  ⚠ 第 {page} 页第 {retry+1} 次: {last_error} ({host})，{wait:.0f}s 后重试...")
+                print(f"  ⚠ 第 {page} 页第 {retry+1} 次: {last_error} ({label})，{wait:.0f}s 后重试...")
                 time.sleep(wait)
 
         if not success:

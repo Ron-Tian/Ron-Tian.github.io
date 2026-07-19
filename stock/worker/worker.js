@@ -1,14 +1,15 @@
 /**
- * Cloudflare Worker — 自选股云端同步
+ * Cloudflare Worker — 自选股云端同步 + 东方财富 API 代理
  * ============================================================
  * 功能：
- *   - GET  /  → 读取自选股（从 KV 存储）
- *   - POST /  → 保存自选股（写入 KV 存储）
- *   - DELETE / → 清空自选股
+ *   - GET    /                        → 读取自选股（从 KV 存储）
+ *   - POST   /                        → 保存自选股（写入 KV 存储）
+ *   - DELETE /                        → 清空自选股
+ *   - GET    /proxy/eastmoney/api/*   → 代理东方财富行情 API
  *
  * 安全：
  *   - CORS 只允许博客域名 (BLOG_ORIGIN)
- *   - X-API-Key 头验证
+ *   - X-API-Key 头验证（代理端点使用代理密钥验证）
  *
  * 存储：
  *   - Cloudflare KV（免费层：每天 100,000 次读取 + 1,000 次写入）
@@ -26,6 +27,12 @@ export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     const allowedOrigin = env.BLOG_ORIGIN || 'https://ron-tian.github.io';
+    const url = new URL(request.url);
+
+    // ─── 代理路由：东方财富 API ───
+    if (url.pathname.startsWith('/proxy/eastmoney/')) {
+      return await handleEastmoneyProxy(url, env, allowedOrigin);
+    }
 
     // CORS 预检请求
     if (request.method === 'OPTIONS') {
@@ -61,6 +68,54 @@ export default {
     }
   },
 };
+
+// ============================================================
+// 东方财富 API 代理
+// GitHub Actions 美西 IP 被东方财富拦截（502），通过 Worker 全球节点中转
+// auth: 使用 X-Proxy-Key 头（防止被公共滥用），也可使用 API_KEY
+// ============================================================
+async function handleEastmoneyProxy(url, env, origin) {
+  // 代理密钥验证：API_KEY 或 PROXY_KEY 均可
+  const proxyKey = url.searchParams.get('key') || '';
+  const headerKey = url.searchParams.get('key') ? proxyKey : '';
+  const validKey = env.PROXY_KEY || env.API_KEY || '';
+  if (validKey && proxyKey !== validKey && headerKey !== validKey) {
+    return new Response(JSON.stringify({ success: false, error: 'Invalid proxy key' }), {
+      status: 401,
+      headers: corsHeaders(origin, { 'Content-Type': 'application/json' }),
+    });
+  }
+
+  // 构造东方财富 URL：/proxy/eastmoney/api/qt/clist/get?... → eastmoney.com/api/qt/clist/get?...
+  const eastmoneyPath = url.pathname.replace('/proxy/eastmoney', '');
+  const eastmoneyParams = url.searchParams;
+  // 移除 key 参数（不传给东方财富）
+  eastmoneyParams.delete('key');
+  const queryString = eastmoneyParams.toString();
+  const eastmoneyUrl = `http://push2.eastmoney.com${eastmoneyPath}${queryString ? '?' + queryString : ''}`;
+
+  try {
+    const response = await fetch(eastmoneyUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Referer': 'https://quote.eastmoney.com/',
+      },
+    });
+
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: corsHeaders(origin, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'public, max-age=30',
+      }),
+    });
+  } catch (err) {
+    return jsonError(502, 'Eastmoney proxy error: ' + err.message, origin);
+  }
+}
 
 // ============================================================
 // GET：读取自选股
