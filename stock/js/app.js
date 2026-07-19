@@ -52,6 +52,8 @@ const GITHUB_CONFIG = {
 
 // 云端同步状态
 let cloudSyncStatus = 'idle'; // idle / syncing / success / error / offline
+let cloudInitialLoadDone = false; // 初始云端加载是否完成（防止竞态覆盖用户操作）
+let localVersion = 0; // 本地修改版本号，每次 saveWatchlist 递增（用于检测云加载期间用户是否操作过）
 
 function getWatchlist() {
   try {
@@ -63,6 +65,7 @@ function getWatchlist() {
 
 function saveWatchlist(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  localVersion++;
   // 异步同步到云端（不阻塞 UI）
   if (CLOUD_CONFIG.enabled) {
     syncToCloud(list);
@@ -104,6 +107,7 @@ async function loadFromCloud() {
 
   cloudSyncStatus = 'syncing';
   updateCloudStatus();
+  const versionBefore = localVersion; // 记录发起请求时的本地版本号
 
   try {
     const res = await fetch(CLOUD_CONFIG.workerUrl, {
@@ -115,13 +119,17 @@ async function loadFromCloud() {
 
     const data = await res.json();
     if (data.success && Array.isArray(data.stocks)) {
-      // 合并云端和本地（以云端为主，补充本地独有的）
-      const cloudSet = new Set(data.stocks);
-      const local = getWatchlist();
-      const localOnly = local.filter(c => !cloudSet.has(c));
-      const merged = [...data.stocks, ...localOnly];
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      // 竞态保护：如果在网络请求期间用户修改了本地自选股，不覆盖本地
+      if (localVersion === versionBefore) {
+        // 云端为权威数据源：直接替换本地（不合并），避免已删除的股票被重新加回
+        if (data.stocks.length > 0) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.stocks));
+        }
+      } else {
+        // 用户在加载期间做了修改，以本地为准，重新同步到云端
+        syncToCloud(getWatchlist());
+      }
+      cloudInitialLoadDone = true;
       cloudSyncStatus = 'success';
       updateCloudStatus();
       return data.stocks.length > 0;
@@ -193,6 +201,7 @@ async function loadFromGitHub() {
 
   cloudSyncStatus = 'syncing';
   updateCloudStatus();
+  const versionBefore = localVersion;
 
   try {
     const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}?ref=${GITHUB_CONFIG.branch}`;
@@ -207,12 +216,15 @@ async function loadFromGitHub() {
     const content = JSON.parse(atob(fileData.content.replace(/\n/g, '')));
 
     if (Array.isArray(content)) {
-      const cloudSet = new Set(content);
-      const local = getWatchlist();
-      const localOnly = local.filter(c => !cloudSet.has(c));
-      const merged = [...content, ...localOnly];
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      // 竞态保护：如果在网络请求期间用户修改了本地自选股，不覆盖本地
+      if (localVersion === versionBefore) {
+        if (content.length > 0) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+        }
+      } else {
+        syncToGitHub(getWatchlist());
+      }
+      cloudInitialLoadDone = true;
       cloudSyncStatus = 'success';
       updateCloudStatus();
       return content.length > 0;
@@ -262,6 +274,34 @@ function removeFromWatchlist(code) {
   let list = getWatchlist();
   list = list.filter((c) => c !== code);
   saveWatchlist(list);
+
+  // 乐观 UI 更新：立即从 DOM 移除该行，不等 refreshAll 网络请求完成
+  const tbody = document.getElementById('watchlistBody');
+  if (tbody) {
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row) => {
+      const codeCell = row.querySelector('.stock-code');
+      if (codeCell && codeCell.textContent.trim() === code) {
+        row.remove();
+      }
+    });
+  }
+
+  // 更新数量徽章
+  const countEl = document.getElementById('watchlistCount');
+  if (countEl) countEl.textContent = list.length;
+
+  // 显示空状态
+  if (list.length === 0) {
+    const empty = document.getElementById('watchlistEmpty');
+    if (empty) empty.style.display = 'block';
+    const tbodyEl = document.getElementById('watchlistBody');
+    if (tbodyEl) tbodyEl.innerHTML = '';
+  }
+
+  showToast('已删除：' + code);
+
+  // 后台刷新全部数据（行情、分析等）
   refreshAll();
 }
 
@@ -934,9 +974,10 @@ document.getElementById('refreshBtn').addEventListener('click', refreshAll);
 // 1. 从URL参数导入自选股（跨设备迁移）
 loadWatchlistFromUrl();
 
-// 2. 从云端加载
+// 2. 从云端加载（完成后设默认值并刷新）
 if (CLOUD_CONFIG.enabled) {
   loadFromCloud().then(() => {
+    // 仅在本地和云端都为空时设置默认自选股
     if (getWatchlist().length === 0) {
       saveWatchlist(['sh601318', 'sz000001', 'sh600519', 'sz000858', 'sz300750']);
     }
