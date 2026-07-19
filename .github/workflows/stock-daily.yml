@@ -67,17 +67,12 @@ jobs:
       - name: Summary
         if: always()
         run: |
-          echo "### 筛选结果摘要" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f stock/data/valuation.json ]; then
-            python -c "
-            import json
-            with open('stock/data/valuation.json') as f:
-                d = json.load(f)
-            print(f'更新时间: {d[\"update_time\"]}')
-            print(f'符合条件: {d[\"total\"]} 只')
-            print(f'筛选条件: PE < {d[\"filters\"][\"pe_max\"]} 且 市值 > {d[\"filters\"][\"market_cap_min_yi\"]}亿')
-            " >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠ 数据文件未生成" >> $GITHUB_STEP_SUMMARY
-          fi
+          {
+            echo "### 筛选结果摘要"
+            echo ""
+            if [ -f stock/data/valuation.json ]; then
+              python3 -c 'import json; d = json.load(open("stock/data/valuation.json")); print(f"更新时间: {d[\"update_time\"]}"); print(f"符合条件: {d[\"total\"]} 只"); print(f"筛选条件: PE < {d[\"filters\"][\"pe_max\"]} 且 市值 > {d[\"filters\"][\"market_cap_min_yi\"]}亿")'
+            else
+              echo "⚠ 数据文件未生成"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

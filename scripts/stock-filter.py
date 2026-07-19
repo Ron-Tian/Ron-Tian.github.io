@@ -116,6 +116,8 @@ def fetch_stock_data():
     优先通过 Cloudflare Worker 代理（全球边缘节点），失败后回退直连。
     """
     print("正在从东方财富获取全A股数据（分页获取）...")
+    print(f"  代理配置: PROXY_URL={'已配置' if PROXY_URL else '未配置'}, 重试{max_retries}次")
+    print(f"  第1页URL优先级: {[label for label, _ in _build_urls(1)]}")
 
     all_stocks = []
     page = 1
