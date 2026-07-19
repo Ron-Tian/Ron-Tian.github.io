@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>股票每日分析 — 小午子的成长笔记</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-icon">📈</span>
+      <span class="brand-text">股票每日分析</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="/" class="btn btn-ghost" style="text-decoration:none">← 返回博客</a>
+      <button id="refreshBtn" class="btn btn-ghost">↻ 刷新数据</button>
+      <span id="lastUpdate" class="update-time">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<!-- 大盘指数 -->
+<section class="container">
+  <div class="section-header">
+    <h2>大盘指数</h2>
+    <span class="section-hint">实时行情</span>
+  </div>
+  <div id="indicesGrid" class="indices-grid">
+    <!-- 动态生成 -->
+  </div>
+</section>
+
+<!-- 自选股监控 -->
+<section class="container">
+  <div class="section-header">
+    <h2>自选股监控</h2>
+    <div class="watchlist-add">
+      <input id="stockInput" type="text" placeholder="输入股票代码，如 sh601318 / sz000001" class="input">
+      <button id="addStockBtn" class="btn btn-primary">添加</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="stock-table" id="watchlistTable">
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>代码</th>
+          <th>最新价</th>
+          <th>涨跌额</th>
+          <th>涨跌幅</th>
+          <th>成交量(手)</th>
+          <th>成交额(万)</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="watchlistBody">
+      </tbody>
+    </table>
+    <div id="watchlistEmpty" class="empty-state">
+      <p>还没有添加自选股</p>
+      <p class="muted">在上方输入框输入股票代码，如 <code>sh601318</code>（中国平安）、<code>sz000001</code>（平安银行）</p>
+    </div>
+  </div>
+</section>
+
+<!-- 分析报告 -->
+<section class="container">
+  <div class="section-header">
+    <h2>分析报告</h2>
+    <span class="section-hint" id="analysisDate">--</span>
+  </div>
+  <div id="summaryCards" class="summary-cards">
+    <!-- 动态生成 -->
+  </div>
+  <div id="analysisList" class="analysis-list">
+    <!-- 动态生成 -->
+  </div>
+</section>
+
+<!-- 选股结果 -->
+<section class="container">
+  <div class="section-header">
+    <h2>选股结果</h2>
+    <span class="section-hint">涨幅 &gt; 2% 且 成交额 &gt; 1亿</span>
+  </div>
+  <div class="table-wrap">
+    <table class="stock-table" id="picksTable">
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>代码</th>
+          <th>最新价</th>
+          <th>涨跌幅</th>
+          <th>成交额(亿)</th>
+          <th>入选理由</th>
+        </tr>
+      </thead>
+      <tbody id="picksBody">
+      </tbody>
+    </table>
+    <div id="picksEmpty" class="empty-state">
+      <p>暂无符合条件的个股</p>
+      <p class="muted">添加自选股后自动筛选，或调整筛选条件</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>数据来源：公开行情接口 · 仅供学习参考，不构成投资建议 · <a href="/" style="color:var(--text-dim)">返回小午子的成长笔记</a></p>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
