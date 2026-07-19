@@ -52,6 +52,7 @@ EASTMONEY_BASE = (
 # f100: 行业
 
 # 筛选条件
+PE_MIN = 2           # 市盈率下限（排除异常低值）
 PE_MAX = 30          # 市盈率上限
 MARKET_CAP_MIN = 10  # 市值下限（亿元）
 
@@ -167,7 +168,9 @@ def filter_stocks(stocks):
         # 市值转亿元
         market_cap_yi = market_cap / 1e8
 
-        # 筛选条件
+        # 筛选条件：2 < PE(TTM) < 30 且 市值 > 10亿
+        if pe <= PE_MIN:
+            continue  # 排除异常低市盈率
         if pe >= PE_MAX:
             continue
         if market_cap_yi <= MARKET_CAP_MIN:
@@ -200,7 +203,7 @@ def filter_stocks(stocks):
     # 按市盈率从低到高排序
     result.sort(key=lambda x: x["pe"])
 
-    print(f"筛选完成：{len(result)} 只股票符合条件（PE<{PE_MAX} 且 市值>{MARKET_CAP_MIN}亿）")
+    print(f"筛选完成：{len(result)} 只股票符合条件（{PE_MIN} < PE(TTM) < {PE_MAX} 且 市值>{MARKET_CAP_MIN}亿）")
     return result
 
 
@@ -217,7 +220,9 @@ def generate_output(stocks):
         "update_time": now.strftime("%Y-%m-%d %H:%M:%S"),
         "update_timestamp": int(now.timestamp()),
         "filters": {
+            "pe_min": PE_MIN,
             "pe_max": PE_MAX,
+            "pe_type": "TTM",
             "market_cap_min_yi": MARKET_CAP_MIN,
             "exclude_st": True,
             "exclude_negative_pe": True,
@@ -243,7 +248,7 @@ def generate_output(stocks):
 
 def main():
     print("=" * 60)
-    print(f"A股价值筛选 — PE<{PE_MAX} 且 市值>{MARKET_CAP_MIN}亿")
+    print(f"A股价值筛选 — {PE_MIN} < PE(TTM) < {PE_MAX} 且 市值>{MARKET_CAP_MIN}亿")
     print(f"运行时间: {datetime.now(timezone(timedelta(hours=8))).strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 

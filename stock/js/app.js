@@ -592,7 +592,7 @@ function renderValuation(data) {
   meta.innerHTML = `
     <span class="valuation-time">📅 更新于 ${data.update_time}</span>
     <span class="valuation-count">共 <b>${data.total}</b> 只符合条件的股票</span>
-    <span class="valuation-cond">PE < ${data.filters.pe_max} · 市值 > ${data.filters.market_cap_min_yi}亿 · 已排除 ST/亏损</span>
+    <span class="valuation-cond">${data.filters.pe_min || 0} < PE(TTM) < ${data.filters.pe_max} · 市值 > ${data.filters.market_cap_min_yi}亿 · 已排除 ST/亏损</span>
   `;
 
   renderValuationRows();
