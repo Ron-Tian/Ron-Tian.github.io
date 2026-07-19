@@ -35,52 +35,13 @@
   </div>
 </section>
 
-<!-- 价值筛选：PE<30 且 市值>10亿 -->
-<section class="container">
-  <div class="section-header">
-    <h2>价值筛选</h2>
-    <span class="section-hint" id="valuationHint">2 &lt; 市盈率TTM &lt; 30 且 市值 &gt; 10亿</span>
-  </div>
-  <div id="valuationMeta" class="valuation-meta">
-    <!-- 更新时间、总数 -->
-  </div>
-  <div class="table-wrap">
-    <table class="stock-table" id="valuationTable">
-      <thead>
-        <tr>
-          <th onclick="sortValuation('pe')" style="cursor:pointer">市盈率 ↕</th>
-          <th onclick="sortValuation('market_cap')" style="cursor:pointer">市值(亿) ↕</th>
-          <th>名称</th>
-          <th>代码</th>
-          <th>最新价</th>
-          <th>涨跌幅</th>
-          <th>行业</th>
-        </tr>
-      </thead>
-      <tbody id="valuationBody">
-      </tbody>
-    </table>
-    <div id="valuationEmpty" class="empty-state">
-      <p>正在加载筛选数据...</p>
-      <p class="muted">数据每日收盘后自动更新</p>
-    </div>
-  </div>
-</section>
-
 <!-- 自选股监控 -->
 <section class="container">
   <div class="section-header">
     <h2>自选股监控 <span id="watchlistCount" class="count-badge">0</span></h2>
-    <div class="watchlist-actions">
-      <div class="watchlist-add">
-        <input id="stockInput" type="text" placeholder="输入股票代码，如 sh601318 / sz000001" class="input">
-        <button id="addStockBtn" class="btn btn-primary">添加</button>
-      </div>
-      <div class="watchlist-ops">
-        <button class="btn btn-sm btn-ghost" onclick="exportWatchlist()" title="复制自选股代码到剪贴板">📤 导出</button>
-        <button class="btn btn-sm btn-ghost" onclick="importWatchlist()" title="从文本导入股票代码">📥 导入</button>
-        <button class="btn btn-sm btn-ghost" onclick="clearWatchlist()" title="清空全部自选股">🗑 清空</button>
-      </div>
+    <div class="watchlist-add">
+      <input id="stockInput" type="text" placeholder="输入股票代码，如 sh601318 / sz000001" class="input">
+      <button id="addStockBtn" class="btn btn-primary">添加</button>
     </div>
   </div>
   <div class="table-wrap">
@@ -118,6 +79,38 @@
   </div>
   <div id="analysisList" class="analysis-list">
     <!-- 动态生成 -->
+  </div>
+</section>
+
+<!-- 价值筛选：PE<30 且 市值>10亿 -->
+<section class="container">
+  <div class="section-header">
+    <h2>价值筛选</h2>
+    <span class="section-hint" id="valuationHint">2 &lt; 市盈率TTM &lt; 30 且 市值 &gt; 10亿</span>
+  </div>
+  <div id="valuationMeta" class="valuation-meta">
+    <!-- 更新时间、总数 -->
+  </div>
+  <div class="table-wrap">
+    <table class="stock-table" id="valuationTable">
+      <thead>
+        <tr>
+          <th onclick="sortValuation('pe')" style="cursor:pointer">市盈率 ↕</th>
+          <th onclick="sortValuation('market_cap')" style="cursor:pointer">市值(亿) ↕</th>
+          <th>名称</th>
+          <th>代码</th>
+          <th>最新价</th>
+          <th>涨跌幅</th>
+          <th>行业</th>
+        </tr>
+      </thead>
+      <tbody id="valuationBody">
+      </tbody>
+    </table>
+    <div id="valuationEmpty" class="empty-state">
+      <p>正在加载筛选数据...</p>
+      <p class="muted">数据每日收盘后自动更新</p>
+    </div>
   </div>
 </section>
 

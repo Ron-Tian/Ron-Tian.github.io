@@ -42,9 +42,9 @@ body {
 }
 
 .topbar-inner {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 14px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -128,9 +128,9 @@ body {
 
 /* ─── 容器与区块 ─── */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 32px;
 }
 
 .section-header {
@@ -383,6 +383,10 @@ body {
   .stock-table th, .stock-table td { padding: 8px 10px; }
 }
 
+@media (max-width: 1024px) {
+  .indices-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* ─── 价值筛选板块 ─── */
 .valuation-meta {
   display: flex;
@@ -433,23 +437,6 @@ body {
   color: #fff;
   border-radius: 10px;
   vertical-align: middle;
-}
-
-.watchlist-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.watchlist-ops {
-  display: flex;
-  gap: 6px;
-}
-
-.watchlist-ops .btn-sm {
-  font-size: 12px;
-  padding: 4px 10px;
 }
 
 /* ─── 云端同步状态 ─── */
