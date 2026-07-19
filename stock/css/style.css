@@ -158,34 +158,40 @@ body {
 /* ─── 大盘指数卡片 ─── */
 .indices-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr); /* 固定5列，等宽 */
+  gap: 12px; /* 减小间距 */
 }
 
 .index-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 14px 12px; /* 减小padding */
   transition: border-color 0.2s;
 }
 .index-card:hover { border-color: var(--text-muted); }
 
 .index-name {
-  font-size: 15px;
+  font-size: 13px; /* 从15px缩小 */
   color: var(--text-dim);
-  margin-bottom: 8px;
+  margin-bottom: 6px; /* 从8px减小 */
+  white-space: nowrap; /* 禁止换行 */
+  overflow: hidden;
+  text-overflow: ellipsis; /* 超长截断 */
 }
 
 .index-price {
-  font-size: 28px;
+  font-size: 22px; /* 从28px缩小 */
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .index-change {
-  margin-top: 6px;
-  font-size: 14px;
+  margin-top: 4px; /* 从6px减小 */
+  font-size: 12px; /* 从14px缩小 */
   font-variant-numeric: tabular-nums;
 }
 
@@ -370,7 +376,7 @@ body {
   .topbar-inner { padding: 12px 16px; }
   .container { padding: 16px; }
   .input { width: 180px; }
-  .indices-grid { grid-template-columns: 1fr; }
+  .indices-grid { grid-template-columns: repeat(3, 1fr); }
   .analysis-card { flex-direction: column; align-items: flex-start; gap: 8px; }
   .analysis-metrics { flex-wrap: wrap; gap: 12px; }
   .stock-table { font-size: 12px; }

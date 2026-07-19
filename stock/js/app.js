@@ -57,23 +57,60 @@ function removeFromWatchlist(code) {
   refreshAll();
 }
 
-// 导出自选股（生成可复制的文本）
+// 导出自选股（生成分享链接）
 function exportWatchlist() {
   const list = getWatchlist();
   if (list.length === 0) {
     showToast('自选股为空，无可导出内容');
     return;
   }
+  // 生成带自选股的分享URL
+  const shareUrl = window.location.origin + window.location.pathname + '?watchlist=' + list.join(',');
   const text = list.join(',');
   // 尝试复制到剪贴板
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast(`已复制 ${list.length} 只自选股到剪贴板`);
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast(`已复制 ${list.length} 只自选股的分享链接`);
     }).catch(() => {
-      prompt('请手动复制以下内容：', text);
+      prompt('请手动复制分享链接（含自选股，换设备打开即可）：', shareUrl);
     });
   } else {
-    prompt('请手动复制以下内容：', text);
+    prompt('请手动复制分享链接：', shareUrl);
+  }
+}
+
+// 从URL参数加载自选股（跨设备迁移）
+function loadWatchlistFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const watchlistParam = params.get('watchlist');
+    if (!watchlistParam) return false;
+
+    const codes = watchlistParam
+      .split(/[,\n\r\s]+/)
+      .map(c => c.trim().toLowerCase())
+      .filter(c => /^[a-z]{2}\d{6}$/.test(c));
+
+    if (codes.length === 0) return false;
+
+    const existing = getWatchlist();
+    let added = 0;
+    for (const code of codes) {
+      if (!existing.includes(code)) {
+        existing.push(code);
+        added++;
+      }
+    }
+    saveWatchlist(existing);
+    // 清理URL参数，避免重复导入
+    const url = new URL(window.location.href);
+    url.searchParams.delete('watchlist');
+    window.history.replaceState({}, '', url.toString());
+    showToast(`已从链接导入 ${added} 只自选股，共 ${existing.length} 只`);
+    return true;
+  } catch (e) {
+    console.warn('URL参数解析失败:', e);
+    return false;
   }
 }
 
@@ -686,6 +723,10 @@ document.getElementById('stockInput').addEventListener('keydown', (e) => {
 document.getElementById('refreshBtn').addEventListener('click', refreshAll);
 
 // ─── 初始化 ───
+// 1. 从URL参数导入自选股（跨设备迁移）
+loadWatchlistFromUrl();
+
+// 2. 如果仍为空，设置默认自选股
 if (getWatchlist().length === 0) {
   saveWatchlist(['sh601318', 'sz000001', 'sh600519', 'sz000858', 'sz300750']);
 }
